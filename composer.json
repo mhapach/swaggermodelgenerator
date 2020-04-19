@@ -1,0 +1,27 @@
+{
+    "name": "mhapach/swaggermodelgenerator",
+    "description": "Swagger Model generator for Laravel",
+    "license": "MIT",
+    "keywords":["laravel","Swagger", "openapi", "generator", "model"],
+    "authors": [
+        {
+            "name": "mhapach",
+            "email": "mhapach@gmail.com"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require": {
+        "php": "^7.2",
+        "guzzlehttp/guzzle": "^6.3",
+        "laravel/framework": "^7.0",
+        "laravel/passport": "^8.4",
+        "laravel/tinker": "^2.0",
+        "symfony/yaml": "^5.0",
+        "ext-json": "*"
+    },
+    "autoload": {
+        "psr-4": {
+            "mhapach\\SwaggerModelGenerator\\": "src/"
+        }
+    }
+}
