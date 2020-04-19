@@ -10,10 +10,17 @@ Current release supports only OpenAPI 2.0 (Aka OAS)
 
 ## Installation
 
-Via Composer
+Step 1. Add Eloquent Model Generator to your project via Composer
 
 ``` bash
 $ composer require mhapach/swaggermodelgenerator
+```
+Step 1. Register SwaggerModelGeneratorServiceProvider in config/app.php
+```  
+'providers' => [
+    //...
+    \mhapach\SwaggerModelGenerator\SwaggerModelGeneratorServiceProvider::class,
+]
 ```
 
 ## Usage
