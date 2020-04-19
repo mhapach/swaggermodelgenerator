@@ -15,7 +15,7 @@ Step 1. Add Eloquent Model Generator to your project via Composer
 ``` bash
 $ composer require mhapach/swaggermodelgenerator
 ```
-Step 1. Register SwaggerModelGeneratorServiceProvider in config/app.php
+Step 2. Register SwaggerModelGeneratorServiceProvider in config/app.php
 ```  
 'providers' => [
     //...
