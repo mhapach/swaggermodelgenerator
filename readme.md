@@ -6,7 +6,7 @@
 [![StyleCI][ico-styleci]][link-styleci]
 
 This library generates models and service with methods based on Swagger scheme. 
-Current release supports only OpenAPI 2.0 (Aka OAS)
+Current release supports OpenAPI 2.0 (Aka OAS) and OpenApi 3.0
 
 ## Installation
 
@@ -37,12 +37,26 @@ Step 2. Register SwaggerModelGeneratorServiceProvider in config/app.php
     $converterInstance->genModels($modelsPath);        
     $converterInstance->genService($servicePath);
     
-### Generated service and models usage
+### Generated service and models usage. Example 1
     $serviceAddress = "http://your-service.com/some-name";
     $service = new Service($serviceAddress);
     $bc = $service->benefitCategoriesUsingGET([
         'path' => ['id' => 1122],
         'query' => ['some-param' => 1],
+    ]);   
+### Generated service and models usage. Example 2
+    $serviceAddress = "http://your-service.com/some-name";
+    $token = 'daksdlka shdlkjahslkdj h==';
+    $headers = [
+        'Accept' => '*/*',
+        'Content-Type' => 'application/x-www-form-urlencoded',
+        'Cache-Control' => 'no-cache',
+        "Authorization" => "Bearer {$token}"
+    ];
+    $service = new Service($serviceAddress, $headers);
+    $bc = $service->benefitCategoriesUsingGET([
+        'query' => ['some-param' => 1],
+        'body' => '{"param1":100, "param2":200}'
     ]);   
     
 ## Change log
