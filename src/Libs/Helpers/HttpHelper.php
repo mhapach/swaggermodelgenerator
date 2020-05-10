@@ -10,7 +10,18 @@ class HttpHelper
 {
     /**
      * @param $url
-     * @param array $data
+     * @param array $data = [
+     *      'query' => [param => 112] - cgi params 
+     *      'path' => [param => 112] - url param replacement
+     *      'form_params' => [param => 112] - post params
+     *      'body' => string {param : 112} - to send requestBody for expl json as string 
+     *      'headers' => [
+     *          'Accept' => '*\/*',
+     *          'Content-Type' => 'application/x-www-form-urlencoded',
+     *          'Cache-Control' => 'no-cache',
+     *          "Authorization" => "Bearer {$accessMarker['access_token']}"          
+     *      ]
+     * ]
      * @param string $method
      * @return string|null
      * @throws \Exception
@@ -27,7 +38,8 @@ class HttpHelper
             $response = (string)$result->getBody();
         } catch (GuzzleException $e) {
             $errorMessage = urldecode($e->getMessage());
-            Log::error($errorMessage);
+            $errorCode = $e->getCode();
+            Log::error("Error Code: $errorCode. Error message: $errorMessage");
         }
 
         if (!empty($errorMessage))

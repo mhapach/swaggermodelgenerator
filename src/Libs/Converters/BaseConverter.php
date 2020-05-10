@@ -4,7 +4,7 @@
 namespace mhapach\SwaggerModelGenerator\Libs\Converters;
 
 
-use mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\ClassEntity;
+use mhapach\SwaggerModelGenerator\Libs\Models\Entities\ClassEntity;
 
 abstract class BaseConverter
 {

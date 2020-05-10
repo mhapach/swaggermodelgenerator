@@ -6,7 +6,7 @@
  * Time: 23:35
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs;
+namespace mhapach\SwaggerModelGenerator\Libs;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
@@ -41,6 +41,7 @@ class BaseService
 
     /** @var string */
     public $errorMessage;
+    public $errorCode;
 
     /**
      * @param $url
@@ -66,15 +67,15 @@ class BaseService
             else{
                 $this->response = HttpHelper::request($url, ['query' => HttpHelper::encodeRequestParams($data)], $method);
             }*/
-        } catch (GuzzleException $e) {
+        } catch (\Exception $e) {
             $this->errorMessage = urldecode($e->getMessage());
-            Log::error($this->errorMessage);
+            $this->errorCode = $e->getCode();
         }
 
         $this->log();
 
         if (!empty($this->errorMessage))
-            throw new \Exception($this->errorMessage);
+            throw new \Exception($this->errorMessage, $this->errorCode);
 
         return $this->response;
     }
@@ -92,9 +93,10 @@ class BaseService
             "Время запроса: " . $this->requestDate->toDateTimeString() . "\n" .
             "Время ответа: " . (new Carbon())->toDateTimeString() . "\n" .
             "Ответ: " . $this->response . "\n" .
-            "Ошибки: " . $this->errorMessage . "\n" .
+            "Ошибки: " . $this->errorCode." - ". $this->errorMessage . "\n" .
             "--- /END ---\n";
 
-        Storage::disk()->append($fileName, $content);
+            //Storage::disk()->append($fileName, $content); //This shit makes out of memory error
+        file_put_contents(Storage::disk('local')->path($fileName), $content, FILE_APPEND);            
     }
 }

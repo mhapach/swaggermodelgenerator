@@ -6,9 +6,9 @@
  * Time: 13:03
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models\Swagger;
+namespace mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger;
 
-use mhapach\SwaggerModelGenerator\src\Libs\Models\BaseModel;
+use mhapach\SwaggerModelGenerator\Libs\Models\BaseModel;
 
 class MethodParam extends Property
 {

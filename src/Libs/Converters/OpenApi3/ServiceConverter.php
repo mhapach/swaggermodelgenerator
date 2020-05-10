@@ -6,7 +6,7 @@
  * Time: 19:06
  */
 
-namespace mhapach\SwaggerModelGenerator\Libs\Converters\Swagger;
+namespace mhapach\SwaggerModelGenerator\Libs\Converters\OpenApi3;
 
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
@@ -18,16 +18,16 @@ use mhapach\SwaggerModelGenerator\Libs\Models\Entities\HintEntity;
 use mhapach\SwaggerModelGenerator\Libs\Models\Entities\MethodEntity;
 use mhapach\SwaggerModelGenerator\Libs\Models\Entities\MethodReturnEntity;
 use mhapach\SwaggerModelGenerator\Libs\Models\Entities\PropertyEntity;
-use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\Method;
-use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\MethodParam;
-use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\MethodReturn;
-use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\Property;
-use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\Root;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Method;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\MethodParam;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\MethodReturn;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Property;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Root;
 
 class ServiceConverter
 {
     /** @var Root */
-    private $swagger;
+    private $sourceRoot;
     /** @var string */
     private $ns = '';
     /** @var string */
@@ -44,14 +44,14 @@ class ServiceConverter
 
     /**
      * Swagger constructor.
-     * @param Root $swagger
+     * @param Root $sourceRoot
      * @param string $ns
      * @param string $extends
      * @param string $implements
      */
-    public function __construct(Root $swagger, string $ns = null, string $modelsNs = null, string $extends = "BaseService", string $implements = null)
+    public function __construct(Root $sourceRoot, string $ns = null, string $modelsNs = null, string $extends = "BaseService", string $implements = null)
     {
-        $this->swagger = $swagger;
+        $this->sourceRoot = $sourceRoot;
         $this->ns = $ns;
         $this->modelsNs = $modelsNs ?: $ns;
         $this->extends = $extends;
@@ -68,12 +68,11 @@ class ServiceConverter
             'ns' => $this->ns,
             'extends' => "BaseService",
             'implements' => $this->implements,
-            'hint' => new HintEntity($this->swagger->info),
+            'hint' => new HintEntity($this->sourceRoot->info),
             'methods' => $this->createMethods($debugPath)
         ]);
-        
         $this->setIncludedClasses();
-
+        
         return $this->serviceClassEntity;
     }
 
@@ -88,6 +87,9 @@ class ServiceConverter
         if ($this->modelsNs == $this->ns)
             return;
 
+        if (!$this->serviceClassEntity->methods)
+            return;
+        
         /** @var MethodEntity $methodEntity */
         foreach($this->serviceClassEntity->methods as $method) if ($method->return) {
             /** @var MethodReturnEntity $methodReturnEntity */
@@ -107,40 +109,27 @@ class ServiceConverter
         /** @var MethodEntity[] $methods */
         $methods = null;
         /** @var Method $method */
-        foreach ($this->swagger->paths as $method) if (!$debugPath || $debugPath == $method->path) {
-            $isServiceResponseJson = in_array("application/json", $method->produces) ?  true : false;
+        foreach ($this->sourceRoot->paths as $method) if (!$debugPath || $debugPath == $method->path) {
+            $isServiceResponseJson = $method->responses->{'200'}->content->{'application/json'} ?  true : false;
 
-//            $return = new PropertyEntity($method->return->toArray());
-//            if (!$isServiceResponseJson){
-//                $return->type = "string";
-//                $return->psrType = "string";
-//                $return->refType = "string";
-//                $return->hint->psrType = "string";
-//                $return->hint->type = "string";
-//            }
-//            
             $methodEntity = new MethodEntity([
                 'serviceResponseType' => $isServiceResponseJson ? 'json' : 'string',
-                'path' => $method->path, 
+                'path' => $method->path,
                 'name' => $method->name,
                 'method' => $method->method,
                 'ref' => $isServiceResponseJson ? $method->ref : null,
                 'produces' => $method->produces,
-//                'return' => $this->createMethodReturn($method)
                 'hint' => new HintEntity([
-//                    'type' => $isServiceResponseJson ? $method->return->type : 'string',
-//                    'psrType' => $isServiceResponseJson ? $method->return->psrType : 'string',
-//                    'format' => $method->return->format,
-                    'description' => $method->summary,
+                    'description' => $method->summary
                 ]),
                 'params' => $this->createMethodParams($method),
-                'return' => $this->createMethodReturn($method),
+                'return' => $this->createMethodReturn($method)
             ]);
             $methods[] = $methodEntity;
         }
         return $methods ? collect($methods) : null ;
     }
-    
+
     /**
      * @param Method $method
      * @return PropertyEntity[] | Collection | null
@@ -162,10 +151,15 @@ class ServiceConverter
      */
     private function createMethodParams(Method $method)
     {
-        $params = null;
+        if (!$method->parameters && !$method->requestBody)
+            return null;
+        
+        if ($method->requestBody)
+            $method->parameters[] = $method->requestBody;
+        
         /** @var MethodParam $param */
         foreach ($method->parameters as $param) {
-            $params[] = new MethodParamEntity([
+            $entityParams[] = new MethodParamEntity([
                 'type' => $param->type,
                 'psrType' => $param->psrType,
                 'format' => $param->format,
@@ -182,7 +176,7 @@ class ServiceConverter
                 ]),
             ]);
         }
-        return $params ? collect($params) : null ;
+        return $entityParams ? collect($entityParams) : null ;
     }
 
 }

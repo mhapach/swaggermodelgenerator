@@ -7,11 +7,11 @@
  * Class maker
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models\Entities;
+namespace mhapach\SwaggerModelGenerator\Libs\Models\Entities;
 
 /**
  * Class HintEntity
- * @package mhapach\SwaggerModelGenerator\src\Libs\Models\Entities
+ * @package mhapach\SwaggerModelGenerator\Libs\Models\Entities
  */
 class HintEntity extends BaseEntity
 {

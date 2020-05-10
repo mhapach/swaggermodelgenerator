@@ -6,7 +6,7 @@
  * Time: 12:19
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models\Entities;
+namespace mhapach\SwaggerModelGenerator\Libs\Models\Entities;
 
 
 interface IRenderable

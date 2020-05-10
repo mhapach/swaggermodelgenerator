@@ -1,9 +1,9 @@
 <?php
 /**
- * @var \mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\ClassEntity $entity
- * @var \mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\PropertyEntity $propertyEntity
- * @var \mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\MethodEntity $methodEntity
- * @var \mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\MethodParamEntity $methodParamEntity
+ * @var \mhapach\SwaggerModelGenerator\Libs\Models\Entities\ClassEntity $entity
+ * @var \mhapach\SwaggerModelGenerator\Libs\Models\Entities\PropertyEntity $propertyEntity
+ * @var \mhapach\SwaggerModelGenerator\Libs\Models\Entities\MethodEntity $methodEntity
+ * @var \mhapach\SwaggerModelGenerator\Libs\Models\Entities\MethodParamEntity $methodParamEntity
  */
 print '<?php';
 ?>
@@ -29,10 +29,13 @@ class {{$entity->name}} {{$entity->extends ? 'extends '.$entity->extends : ''}} 
 {
     /** @var string - rest service address */
     public $serviceAddress;
+    /** @var array - default header lines */
+    public $defaultHeaders = [];
 
-    public function __construct($serviceAddress)
+    public function __construct(string $serviceAddress, array $defaultHeaders = [])
     {
         $this->serviceAddress = $serviceAddress;
+        $this->defaultHeaders = $defaultHeaders;
     }
 
     @include('mhapach::inc.methods')

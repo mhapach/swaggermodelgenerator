@@ -6,15 +6,15 @@
  * Time: 17:29
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models\Swagger;
+namespace mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger;
 
-use mhapach\SwaggerModelGenerator\src\Libs\Models\BaseModel;
+use mhapach\SwaggerModelGenerator\Libs\Models\BaseModel;
 use Illuminate\Support\Collection;
 
 class Root extends BaseModel
 {
     /** @var string */
-    public $swagger;
+//    public $swagger;
     /** @var string[] | Collection */
     public $info;
     /** @var string */
@@ -48,8 +48,8 @@ class Root extends BaseModel
 
             $class = new Definition($definition);
             $class->name = $definitionName;
-            if (!empty($definition['properties']))
-                $class->properties = $this->_properties($definition['properties']);
+            if (!empty($definition->properties))
+                $class->properties = $this->_properties($definition->properties);
             $res[] = $class;
         }
         $this->definitions = $res ? collect($res) : null;
@@ -62,8 +62,8 @@ class Root extends BaseModel
         /** @var array $prop */
         foreach ($this->paths as $path => $yamlMethods) {
             foreach ($yamlMethods as $method => $props) {
-                $props['method'] = $method;
-                $props['path'] = $path;
+                $props->method = $method;
+                $props->path = $path;
                 $res[] = new Method($props);
             }
         }
@@ -75,17 +75,17 @@ class Root extends BaseModel
     /**
      * @return Collection | Property[] | null
      */
-    private function _properties(array $definitionProperties) {
+    private function _properties(\stdClass $definitionProperties) {
         /** @var array $definition */
         $properties = null;
         /** @var array $prop */
         foreach ($definitionProperties as $propName => $prop) {
-            $prop['name'] = $propName;
+            $prop->name = $propName;
             $properties[] = new Property($prop);
         }
 
         if (!empty($properties))
-            collect($properties);
+            $properties = collect($properties);
 
         return $properties;
     }

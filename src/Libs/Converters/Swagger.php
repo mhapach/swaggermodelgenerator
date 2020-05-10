@@ -5,10 +5,11 @@ namespace mhapach\SwaggerModelGenerator\Libs\Converters;
 
 
 use Illuminate\Support\Collection;
-use mhapach\SwaggerModelGenerator\src\Libs\Converters\Swagger\EntityConverter;
-use mhapach\SwaggerModelGenerator\src\Libs\Converters\Swagger\ServiceConverter;
-use mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\ClassEntity;
-use mhapach\SwaggerModelGenerator\src\Libs\Models\Swagger\Root;
+use Illuminate\Support\Facades\File;
+use mhapach\SwaggerModelGenerator\Libs\Converters\Swagger\EntityConverter;
+use mhapach\SwaggerModelGenerator\Libs\Converters\Swagger\ServiceConverter;
+use mhapach\SwaggerModelGenerator\Libs\Models\Entities\ClassEntity;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\Root;
 
 class Swagger extends BaseConverter
 {
@@ -46,10 +47,12 @@ class Swagger extends BaseConverter
         /** @var Collection | ClassEntity[] $entities */
         $entities = $swaggerEntityConverter->get($this->debugDefinitionName);
         if ($entities) {
+            if (!File::exists($path))
+                File::makeDirectory($path,0775,true,false);
+
             /** @var ClassEntity $entity */
-            foreach ($entities as $entity) {
-                file_put_contents( $path."/{$entity->name}.php", $this->renderModel($entity));
-            }
+            foreach ($entities as $entity)
+                File::put( $path."/{$entity->name}.php", $this->renderModel($entity));            
         }
     }
 
@@ -64,7 +67,10 @@ class Swagger extends BaseConverter
         /** @var ClassEntity $entities */
         $service = $swaggerServiceConverter->get($this->debugPath);
         if ($service) {
-            file_put_contents( $path."/{$service->name}.php", $this->renderService($service));
+            if (!File::exists($path))
+                File::makeDirectory($path,0775,true,false);
+
+            File::put( $path."/{$service->name}.php", $this->renderService($service));
         }
     }
 }

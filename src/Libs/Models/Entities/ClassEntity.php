@@ -7,13 +7,13 @@
  * Class maker
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models\Entities;
+namespace mhapach\SwaggerModelGenerator\Libs\Models\Entities;
 
 use Illuminate\Support\Collection;
 
 /**
  * Class ClassEntity
- * @package mhapach\SwaggerModelGenerator\src\Libs\Models\Entities
+ * @package mhapach\SwaggerModelGenerator\Libs\Models\Entities
  */
 class ClassEntity extends BaseEntity implements IRenderable
 {

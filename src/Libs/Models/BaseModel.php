@@ -6,12 +6,12 @@
  * Time: 12:54
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models;
+namespace mhapach\SwaggerModelGenerator\Libs\Models;
 
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
-class  BaseModel
+class BaseModel
 {
     /** @var bool - Строгое соответсвие полям модели */
     protected $strict = true;

@@ -5,9 +5,9 @@ namespace mhapach\SwaggerModelGenerator;
 use Illuminate\Support\Facades\Cache;
 use mhapach\SwaggerModelGenerator\Libs\Converters\Swagger as SwaggerConverter;
 use mhapach\SwaggerModelGenerator\Libs\Converters\OpenApi3 as OpenApi3Converter;
-use mhapach\SwaggerModelGenerator\src\Libs\SourceFactory;
-use mhapach\SwaggerModelGenerator\src\Libs\Models\Swagger\Root as SwaggerRoot;
-use mhapach\SwaggerModelGenerator\Libs\Models\OpenApi3\Root as OpenApi3Root;
+use mhapach\SwaggerModelGenerator\Libs\SourceFactory;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\Root as SwaggerRoot;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Root as OpenApi3Root;
 
 /*class SwaggerModelGenerator {
     public function test(){
@@ -40,15 +40,15 @@ class SwaggerModelGenerator
     /**
      * @throws \Exception
      */
-    protected function initSourceRoot() {
-        $source = new SourceFactory($this->schemeUrl);
+    public function initSourceRoot() {
+        $sourceFactory = new SourceFactory($this->schemeUrl);
 
         if (self::$debug)
             $this->sourceRoot = Cache::get($this->schemeUrl);
 
         if (!$this->sourceRoot) {
             try {
-                $this->sourceRoot = $source->instance();
+                $this->sourceRoot = $sourceFactory->instance();
                 Cache::put($this->schemeUrl, $this->sourceRoot);
             } catch (\Exception $e) {
                 die($e->getMessage());
@@ -69,8 +69,9 @@ class SwaggerModelGenerator
         $this->initSourceRoot();
         if ($this->sourceRoot instanceof SwaggerRoot)
             return new SwaggerConverter($this->sourceRoot, $modelsNs, $serviceNs);
-        elseif ($this->sourceRoot instanceof OpenApi3Root)
+        elseif ($this->sourceRoot instanceof OpenApi3Root) {
             return new OpenApi3Converter($this->sourceRoot, $modelsNs, $serviceNs);
+        }
         else
             return null;
     }

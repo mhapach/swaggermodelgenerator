@@ -7,17 +7,17 @@
  * Class maker
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models\Entities;
+namespace mhapach\SwaggerModelGenerator\Libs\Models\Entities;
 
-use mhapach\SwaggerModelGenerator\src\Libs\Models\BaseModel;
+use mhapach\SwaggerModelGenerator\Libs\Models\BaseModel;
 
 /**
  * Class Entity
- * @package mhapach\SwaggerModelGenerator\src\Libs\Models
+ * @package mhapach\SwaggerModelGenerator\Libs\Models
  */
 abstract class BaseEntity extends BaseModel
 {
-    public function __construct(array $attributes = [])
+    public function __construct($attributes = null)
     {
         parent::__construct($attributes);
     }

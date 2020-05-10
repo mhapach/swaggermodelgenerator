@@ -1,9 +1,9 @@
 <?php
 /**
- * @var \mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\ClassEntity $entity
- * @var \mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\PropertyEntity $propertyEntity
- * @var \mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\MethodEntity $methodEntity
- * @var \mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\MethodParamEntity $methodParamEntity
+ * @var \mhapach\SwaggerModelGenerator\Libs\Models\Entities\ClassEntity $entity
+ * @var \mhapach\SwaggerModelGenerator\Libs\Models\Entities\PropertyEntity $propertyEntity
+ * @var \mhapach\SwaggerModelGenerator\Libs\Models\Entities\MethodEntity $methodEntity
+ * @var \mhapach\SwaggerModelGenerator\Libs\Models\Entities\MethodParamEntity $methodParamEntity
  */
 print '<?php';
 ?>
@@ -16,8 +16,9 @@ namespace {{$entity->ns}};
 @if($entity->includedClasses)
 @foreach($entity->includedClasses as $includedClass)
 use {{$includedClass}};    
-@endforeach    
+@endforeach
 @endif
+use Illuminate\Support\Collection;
 
 /**
 @if($entity->hint->title) * {{$entity->hint->title}} @endif.

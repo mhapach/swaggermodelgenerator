@@ -7,7 +7,7 @@
  * Class maker
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models\Entities;
+namespace mhapach\SwaggerModelGenerator\Libs\Models\Entities;
 
 class MethodParamEntity extends PropertyEntity implements IRenderable
 {

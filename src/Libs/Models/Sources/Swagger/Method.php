@@ -6,12 +6,12 @@
  * Time: 12:10
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models\Swagger;
+namespace mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger;
 
 
-use mhapach\SwaggerModelGenerator\src\Libs\Models\BaseModel;
+use mhapach\SwaggerModelGenerator\Libs\Models\BaseModel;
 use Illuminate\Support\Collection;
-use mhapach\SwaggerModelGenerator\src\Libs\Models\Entities\HintEntity;
+use mhapach\SwaggerModelGenerator\Libs\Models\Entities\HintEntity;
 
 class Method extends BaseModel
 {
@@ -35,7 +35,7 @@ class Method extends BaseModel
     /** @var array */
     public $responses;
 
-    /** @var Property */
+    /** @var MethodReturn[] | Collection */
     public $return;
 
 
@@ -49,18 +49,34 @@ class Method extends BaseModel
         $this->initName();
         $this->initReturn();
     }
-
+//
+//    private function initReturn(){
+//        if (!empty($this->responses['200'])) {
+//            $successResponse = $this->responses['200'];
+//            $this->return = new Property ($successResponse['schema']);
+//            $this->return->hint = new HintEntity([
+//                'type' => $this->return->type,
+//                'description' => $this->return->description,
+//                'psrType' => $this->return->psrType,
+//                'format' => $this->return->format
+//            ]);
+//        }
+//    }
     private function initReturn(){
-        if (!empty($this->responses['200'])) {
-            $successResponse = $this->responses['200'];
-            $this->return = new Property ($successResponse['schema']);
-            $this->return->hint = new HintEntity([
-                'type' => $this->return->type,
-                'description' => $this->return->description,
-                'psrType' => $this->return->psrType,
-                'format' => $this->return->format
-            ]);
+        if (!$this->responses)
+            return null;
+
+        foreach ($this->responses as $responseCode => $value) {
+            /** @var \stdClass $schema */
+            $schema = $value->schema ?? $value;
+            if (isset($schema->{'$ref'}))
+                $schema->type = 'object';
+
+            $schema->responseCode = $responseCode;
+            $this->return[] = new MethodReturn($schema);
         }
+        if (!empty($this->return))
+            $this->return = collect($this->return);
     }
 
     private function initName()

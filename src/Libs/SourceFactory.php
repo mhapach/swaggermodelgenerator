@@ -6,11 +6,12 @@
  * Time: 17:29
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs;
+namespace mhapach\SwaggerModelGenerator\Libs;
 
 
 use Illuminate\Support\Facades\Cache;
-use mhapach\SwaggerModelGenerator\src\Libs\Models\Swagger\Root as SwaggerRoot;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\Root as SwaggerRoot;
+use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Root as OpenApi3Root;
 use Exception;
 use Symfony\Component\Yaml\Yaml;
 use mhapach\SwaggerModelGenerator\Libs\Helpers\HttpHelper;
@@ -36,9 +37,9 @@ class SourceFactory
     }
 
     /**
-     * @return SwaggerRoot
-     * @todo сделать обработку запроса к OpenApi 3
+     * @return SwaggerRoot | OpenApi3Root
      * @throws Exception
+     * @todo сделать обработку запроса к OpenApi 3
      */
     public function instance()
     {
@@ -47,9 +48,16 @@ class SourceFactory
         if (!$this->content)
             throw new Exception("Response from yaml schema is empty");
 
-        $parsedYaml = Yaml::parse($this->content);
+        $parsedYaml = Yaml::parse($this->content, Yaml::PARSE_OBJECT_FOR_MAP);
 
-        return new SwaggerRoot($parsedYaml);
+        if (!empty($parsedYaml->swagger)) {
+            return new SwaggerRoot($parsedYaml);
+        } else if (!empty($parsedYaml->openapi)) {
+            return new OpenApi3Root($parsedYaml);
+        } else {
+            throw new Exception("unsupported format of json: neither swagger nor openApi");
+        }
+
     }
 
     /**
@@ -61,9 +69,8 @@ class SourceFactory
         try {
             $this->content = HttpHelper::request($this->href);
             //$this->content = file_get_contents($this->href);
-        }
-        catch(Exception $e){
-            throw new Exception("Cant request {$this->href}\n".$e->getMessage());
+        } catch (Exception $e) {
+            throw new Exception("Cant request {$this->href}\n" . $e->getMessage());
         }
         return $this->content;
     }

@@ -7,12 +7,12 @@
  * Class maker
  */
 
-namespace mhapach\SwaggerModelGenerator\src\Libs\Models\Entities;
+namespace mhapach\SwaggerModelGenerator\Libs\Models\Entities;
 
 /**
  * @property string $psrType
  * Class PropertyEntity
- * @package mhapach\SwaggerModelGenerator\src\Libs\Models\Entities
+ * @package mhapach\SwaggerModelGenerator\Libs\Models\Entities
  */
 class PropertyEntity extends BaseEntity implements IRenderable
 {
