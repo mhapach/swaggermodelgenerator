@@ -53,15 +53,23 @@ class Method extends BaseModel
         $this->initReturn();
     }
 
-    private function initReturn(){
+    private function initReturn()
+    {
+
         if (!$this->responses)
             return null;
-        
+
         foreach ($this->responses as $responseCode => $response) {
+
+            if (empty($response->content) && empty($response->links) && empty($response->headers))
+                continue;
+
+            $description = $response->description ?? null;
             foreach ($response->content as $contentType => $value) {
                 $schema = $value->schema;
                 $schema->contentType = $contentType;
                 $schema->responseCode = $responseCode;
+                $schema->description = $description;
                 $this->return[] = new MethodReturn($schema);
             }
         }
@@ -80,8 +88,7 @@ class Method extends BaseModel
             foreach ($parts as $part) if ($part) {
                 if (strpos($part, '{') === false) {
                     $this->name .= ucfirst($part);
-                }
-                else {
+                } else {
                     $name = trim($part, '{}');
                     $this->name .= "By" . ucfirst($name);
                 }
@@ -91,23 +98,23 @@ class Method extends BaseModel
     }
 
     /**
-    "responses": {
-        "200": {
-            "description": "Данные золотой записи",
-            "schema": {
-                "$ref": "#/definitions/PeopleGoldenResponseDTO"
-            }
-        },
-        "401": {
-            "description": "Unauthorized"
-        },
-        "403": {
-            "description": "Forbidden"
-        },
-        "404": {
-            "description": "Not Found"
-        }
-    },
-    "deprecated": false
- */
+     * "responses": {
+     * "200": {
+     * "description": "Данные золотой записи",
+     * "schema": {
+     * "$ref": "#/definitions/PeopleGoldenResponseDTO"
+     * }
+     * },
+     * "401": {
+     * "description": "Unauthorized"
+     * },
+     * "403": {
+     * "description": "Forbidden"
+     * },
+     * "404": {
+     * "description": "Not Found"
+     * }
+     * },
+     * "deprecated": false
+     */
 }

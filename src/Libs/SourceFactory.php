@@ -49,7 +49,7 @@ class SourceFactory
             throw new Exception("Response from yaml schema is empty");
 
         $parsedYaml = Yaml::parse($this->content, Yaml::PARSE_OBJECT_FOR_MAP);
-
+        
         if (!empty($parsedYaml->swagger)) {
             return new SwaggerRoot($parsedYaml);
         } else if (!empty($parsedYaml->openapi)) {

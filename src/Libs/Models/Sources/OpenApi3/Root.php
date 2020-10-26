@@ -78,6 +78,7 @@ class Root extends BaseModel
     {
         /** @var array $definition */
         $res = null;
+        
         /** @var array $prop */
         foreach ($this->paths as $path => $yamlMethods) /*if ($path == '/sandbox/currencies/balance')*/ {
             foreach ($yamlMethods as $method => $props) {
@@ -86,7 +87,7 @@ class Root extends BaseModel
                 
                 $res[] = new Method($props);
             }
-        }
+        }        
 
         return $this->paths = $res ? collect($res) : null;
     }
