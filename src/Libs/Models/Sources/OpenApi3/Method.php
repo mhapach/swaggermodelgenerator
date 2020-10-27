@@ -55,24 +55,24 @@ class Method extends BaseModel
 
     private function initReturn()
     {
-
         if (!$this->responses)
             return null;
 
         foreach ($this->responses as $responseCode => $response) {
-
-            if (empty($response->content) && empty($response->links) && empty($response->headers))
-                continue;
+//            if (empty($response->content) && empty($response->links) && empty($response->headers))
+//                continue;
+            $content = isset($response->content) ? $response->content : [];
 
             $description = $response->description ?? null;
-            foreach ($response->content as $contentType => $value) {
-                $schema = $value->schema;
+            foreach ($content as $contentType => $value) {
+                $schema = isset($value->schema) ? $value->schema : null;
                 $schema->contentType = $contentType;
                 $schema->responseCode = $responseCode;
                 $schema->description = $description;
                 $this->return[] = new MethodReturn($schema);
             }
         }
+
         if (!empty($this->return))
             $this->return = collect($this->return);
     }
@@ -97,6 +97,23 @@ class Method extends BaseModel
         $this->name = Str::camel($this->name); // Иногда попадаются тирешки
     }
 
+    /**
+     * @param string $code
+     * @return bool
+     */
+    public function isJsonResponse(string $code)
+    {
+        /** @var bool $result */
+        $result = false;
+        if (
+            !empty($this->responses->{'200'}) &&
+            !empty($this->responses->{'200'}->content) &&
+            !empty($this->responses->{'200'}->content->{'application/json'})
+        ) {
+            $result = true;
+        }
+        return $result;
+    }
     /**
      * "responses": {
      * "200": {

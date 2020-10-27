@@ -110,8 +110,7 @@ class ServiceConverter
         $methods = null;
         /** @var Method $method */
         foreach ($this->sourceRoot->paths as $method) if (!$debugPath || $debugPath == $method->path) {
-            $isServiceResponseJson = $method->responses->{'200'}->content->{'application/json'} ?  true : false;
-
+            $isServiceResponseJson = $method->isJsonResponse(200);
             $methodEntity = new MethodEntity([
                 'serviceResponseType' => $isServiceResponseJson ? 'json' : 'string',
                 'path' => $method->path,
