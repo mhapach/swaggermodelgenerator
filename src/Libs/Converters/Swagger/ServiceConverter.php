@@ -35,6 +35,8 @@ class ServiceConverter
     /** @var string */
     private $extends = "";
     /** @var string */
+    private $className = "";
+    /** @var string */
     private $implements = "";
     /** @var string[] */
     private $modules;
@@ -49,12 +51,13 @@ class ServiceConverter
      * @param string $extends
      * @param string $implements
      */
-    public function __construct(Root $swagger, string $ns = null, string $modelsNs = null, string $extends = "BaseService", string $implements = null)
+    public function __construct(Root $swagger, string $ns = null, string $className = "Service", string $modelsNs = null, string $extends = "BaseService", string $implements = null)
     {
         $this->swagger = $swagger;
         $this->ns = $ns;
         $this->modelsNs = $modelsNs ?: $ns;
         $this->extends = $extends;
+        $this->className = $className;
         $this->implements = $implements;
     }
 
@@ -64,9 +67,9 @@ class ServiceConverter
     public function get(string $debugPath = null)
     {
         $this->serviceClassEntity = new ClassEntity([
-            'name' => "Service",
+            'name' => $this->className,
             'ns' => $this->ns,
-            'extends' => "BaseService",
+            'extends' => $this->extends,
             'implements' => $this->implements,
             'hint' => new HintEntity($this->swagger->info),
             'methods' => $this->createMethods($debugPath)

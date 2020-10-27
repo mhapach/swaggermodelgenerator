@@ -53,18 +53,18 @@ class OpenApi3 extends BaseConverter
 
     /**
      * @param string $path
+     * @param string|null $className - set class name 
      * @param string|null $customModelsNs
      */
-    public function genService(string $path, string $customModelsNs = null) {
+    public function genService(string $path, string $className = "Service", string $customModelsNs = null) {
         $customModelsNs = $customModelsNs ?: $this->modelsNs;
         /** @var EntityConverter $swagg1erEntityConverter */
-        $swaggerServiceConverter = new ServiceConverter($this->sourceRoot, $this->serviceNs, $customModelsNs);
+        $swaggerServiceConverter = new ServiceConverter($this->sourceRoot, $this->serviceNs, $className, $customModelsNs);
         /** @var ClassEntity $entities */
         $service = $swaggerServiceConverter->get($this->debugPath);
         if ($service) {
             if (!File::exists($path))
-                File::makeDirectory($path,0775,true,false);
-
+                File::makeDirectory($path,0775,true,false);            
             File::put( $path."/{$service->name}.php", $this->renderService($service));
         }
     }

@@ -35,6 +35,8 @@ class ServiceConverter
     /** @var string */
     private $extends = "";
     /** @var string */
+    private $className = "";
+    /** @var string */
     private $implements = "";
     /** @var string[] */
     private $modules;
@@ -49,12 +51,13 @@ class ServiceConverter
      * @param string $extends
      * @param string $implements
      */
-    public function __construct(Root $sourceRoot, string $ns = null, string $modelsNs = null, string $extends = "BaseService", string $implements = null)
+    public function __construct(Root $sourceRoot, string $ns = null, string $className = "Service", string $modelsNs = null, string $extends = "BaseService", string $implements = null)
     {
         $this->sourceRoot = $sourceRoot;
         $this->ns = $ns;
         $this->modelsNs = $modelsNs ?: $ns;
         $this->extends = $extends;
+        $this->className = $className;
         $this->implements = $implements;
     }
 
@@ -64,15 +67,15 @@ class ServiceConverter
     public function get(string $debugPath = null)
     {
         $this->serviceClassEntity = new ClassEntity([
-            'name' => "Service",
+            'name' => $this->className,
             'ns' => $this->ns,
-            'extends' => "BaseService",
+            'extends' => $this->extends,
             'implements' => $this->implements,
             'hint' => new HintEntity($this->sourceRoot->info),
             'methods' => $this->createMethods($debugPath)
         ]);
         $this->setIncludedClasses();
-        
+
         return $this->serviceClassEntity;
     }
 
@@ -89,17 +92,17 @@ class ServiceConverter
 
         if (!$this->serviceClassEntity->methods)
             return;
-        
+
         /** @var MethodEntity $methodEntity */
-        foreach($this->serviceClassEntity->methods as $method) if ($method->return) {
+        foreach ($this->serviceClassEntity->methods as $method) if ($method->return) {
             /** @var MethodReturnEntity $methodReturnEntity */
-            foreach ($method->return as $methodReturnEntity ) {
+            foreach ($method->return as $methodReturnEntity) {
                 if ($methodReturnEntity->refType)
                     $this->serviceClassEntity->includedClasses[$methodReturnEntity->refType] = $this->modelsNs . "\\" . $methodReturnEntity->refType;
             }
         }
     }
-    
+
     /**
      * @param string $debugPath
      * @return MethodEntity[] | Collection | null
@@ -126,24 +129,25 @@ class ServiceConverter
             ]);
             $methods[] = $methodEntity;
         }
-        return $methods ? collect($methods) : null ;
+        return $methods ? collect($methods) : null;
     }
 
     /**
      * @param Method $method
      * @return PropertyEntity[] | Collection | null
      */
-    private function createMethodReturn(Method $method) {
+    private function createMethodReturn(Method $method)
+    {
         $res = null;
         /** @var MethodReturn $methodReturn */
-        foreach($method->return as $methodReturn) {
-            $res[]= new MethodReturnEntity($methodReturn->toArray());
+        foreach ($method->return as $methodReturn) {
+            $res[] = new MethodReturnEntity($methodReturn->toArray());
         }
         if ($res)
             $res = collect($res);
         return $res;
     }
-    
+
     /**
      * @param string $debugPath
      * @return MethodParamEntity[]
@@ -152,10 +156,10 @@ class ServiceConverter
     {
         if (!$method->parameters && !$method->requestBody)
             return null;
-        
+
         if ($method->requestBody)
             $method->parameters[] = $method->requestBody;
-        
+
         /** @var MethodParam $param */
         foreach ($method->parameters as $param) {
             $entityParams[] = new MethodParamEntity([
@@ -164,8 +168,8 @@ class ServiceConverter
                 'format' => $param->format,
                 'name' => $param->name,
                 'required' => $param->required,
-                'allowEmptyValue' => $param->allowEmptyValue,                
-                'in' => $param->in,                
+                'allowEmptyValue' => $param->allowEmptyValue,
+                'in' => $param->in,
 
                 'hint' => new HintEntity([
                     'type' => $param->type,
@@ -175,7 +179,7 @@ class ServiceConverter
                 ]),
             ]);
         }
-        return $entityParams ? collect($entityParams) : null ;
+        return $entityParams ? collect($entityParams) : null;
     }
 
 }
