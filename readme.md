@@ -57,6 +57,27 @@ Step 2. Register SwaggerModelGeneratorServiceProvider in config/app.php
     $bc = $service->benefitCategoriesUsingGET([
         'query' => ['some-param' => 1],
         'body' => '{"param1":100, "param2":200}'
+    ]);
+       
+### Debug log enabling. Example 3
+    $serviceAddress = "http://your-service.com/some-name";
+    $service = new Service($serviceAddress);
+    //Enabling log    
+    $service->enableLog();
+    //Extend default log by your data
+    $service->setLogClosure(function(){
+        $str = '';
+        if (!app()->runningInConsole() && Auth::user())
+            $str = "User: " . Auth::user()->name . " (ID = " . Auth::user()->id . ")\n" .
+                "Organisation: " . (Auth::user()->organisation ? Auth::user()->organisation->name  : '')."\n";
+        return $str;
+    });   
+    // Set custom log file - default is storage/logs/rest.log 
+    $service->setLogFile($path = storage_path('logs/test/test.log'));
+    // call service method        
+    $bc = $service->benefitCategoriesUsingGET([
+        'query' => ['some-param' => 1],
+        'body' => '{"param1":100, "param2":200}'
     ]);   
     
 ## Change log
