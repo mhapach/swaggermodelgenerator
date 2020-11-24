@@ -123,6 +123,7 @@ class BaseService
 
         $content = $content .
             "Request address: " . $this->url . "\n" .
+            "Request method: " . $this->method . "\n" .
             "Data: " . json_encode($this->requestParams) . "\n" .
             "Response: " . $this->response . "\n" .
             "Errors: " . $this->errorMessage . "\n" .

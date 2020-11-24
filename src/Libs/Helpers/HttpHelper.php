@@ -2,8 +2,10 @@
 
 namespace mhapach\SwaggerModelGenerator\Libs\Helpers;
 
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Facades\Log;
 
 class HttpHelper
@@ -24,7 +26,7 @@ class HttpHelper
      * ]
      * @param string $method
      * @return string|null
-     * @throws \Exception
+     * @throws Exception
      */
     public static function request($url, array $data = [], $method = 'get') {
         $method = strtolower($method);
@@ -36,14 +38,22 @@ class HttpHelper
         try {
             $result = $httpClient->request($method, $url, $data);
             $response = (string)$result->getBody();
-        } catch (GuzzleException $e) {
+        }
+        catch (RequestException $e) {
             $errorMessage = urldecode($e->getMessage());
             $errorCode = $e->getCode();
-            Log::error("Error Code: $errorCode. Error message: $errorMessage");
+            if ($e->getResponse()->getStatusCode() == 400) 
+                $errorMessage = urldecode($e->getResponse()->getBody()->getContents());            
+        }
+        catch (Exception $e) {
+            $errorCode = $e->getCode();
+            $errorMessage = urldecode($e->getMessage());
         }
 
-        if (!empty($errorMessage))
-            throw new \Exception($errorMessage);
+        if (!empty($errorMessage) || !empty($errorCode)) {
+            Log::error("Error Code: $errorCode. Error message: $errorMessage");
+            throw new Exception($errorMessage, $errorCode);
+        }
 
         return $response;
     }
