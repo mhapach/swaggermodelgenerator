@@ -35,13 +35,19 @@ class Root extends BaseModel
     public function initComponents()
     {
         $components = null;
-        foreach ($this->components->schemas as $name => $value) /*if ($name == 'MarketInstrumentList')*/ {
+        foreach ($this->components->schemas as $name => $value) /*if ($name == 'DoublePeople')*/ {
             $value->name = ParseHelper::getSafeClassName($name);
+            $extendsClassName = null;
+            if (!empty($value->allOf)) {
+                $extendsClassName = last(explode("/", $value->allOf[0]->{'$ref'}));
+                $value->properties = $value->allOf[1]->properties;
+            }
 
             /** @var Component $schema */
             $schema = new Component($value);
             if (!empty($value->properties))
                 $schema->properties = $this->_properties($value->properties);
+            $schema->extends = $extendsClassName; 
 
             $components[] = $schema;
         }

@@ -25,6 +25,12 @@ class Component extends BaseModel
     /** @var string[] */
     public $required;
     
+    /** @var string - class name inside block allOf */
+    public $extends;
+    
+    /** @var */
+    public $description;
+    
     /** @var Property[] | Collection */
     public $properties;
     

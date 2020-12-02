@@ -73,13 +73,13 @@ class EntityConverter
             $entityClass = new ClassEntity([
                 'name' => $definition->name,
                 'ns' => $this->ns,
-                'extends' => $this->extends,
+                'extends' => $definition->extends ?: $this->extends,
                 'implements' => $this->implements,
                 'hint' => new HintEntity($definition->toArray()),
                 'properties' => $this->getConvertedProperties($definition->properties),
                 'includedClasses' => [BaseModel::class, Carbon::class]
             ]);
-            $res []= $entityClass;
+            $res [] = $entityClass;
         }
         return $res;
     }
