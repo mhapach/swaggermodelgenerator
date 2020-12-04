@@ -11,14 +11,12 @@ namespace mhapach\SwaggerModelGenerator\Libs;
 use Carbon\Carbon;
 use Exception;
 use GuzzleHttp\Client;
-use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
+use GuzzleHttp\TransferStats;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
-use mhapach\SwaggerModelGenerator\Libs\Helpers\GuzzleWrapper;
 
 class BaseService
 {
@@ -59,6 +57,8 @@ class BaseService
     /** @var array */
     private $traceLog = [];
     
+    /** @var string */
+    private $lastRequestedUrl; 
 
     /** @var string */
     public $errorMessage;
@@ -79,6 +79,10 @@ class BaseService
         $this->requestDate = new Carbon();
 
         $this->response = null;
+        
+        $data['on_stats'] = function (TransferStats $stats) {
+            $this->lastRequestedUrl = $stats->getEffectiveUri();
+        };
 
         $result = null;
         try {
@@ -142,11 +146,14 @@ class BaseService
                 "Route action: " . request()->route()->getActionName() . "\n" .
                 "Refer (REQUEST_URI): " . getenv('REQUEST_URI') . "\n" .
                 "CGI params: " . json_encode(request()->all(), JSON_UNESCAPED_UNICODE) . "\n";
+        
+        
 
         $content = $content .
             "Request address: " . $this->url . "\n" .
             "Request method: " . $this->method . "\n" .
             "Data: " . json_encode($this->requestParams) . "\n" .
+            "LastRequestedUrl: ". $this->lastRequestedUrl."\n".
             "Response: " . $this->response . "\n" .
             "Errors: " . $this->errorMessage . "\n" .
             "Start time: " . $this->requestDate->toDateTimeString() . "\n" .
