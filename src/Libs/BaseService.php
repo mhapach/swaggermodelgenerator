@@ -9,12 +9,16 @@
 namespace mhapach\SwaggerModelGenerator\Libs;
 
 use Carbon\Carbon;
+use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
+use GuzzleHttp\Exception\RequestException;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Middleware;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use mhapach\SwaggerModelGenerator\Libs\Helpers\HttpHelper;
+use mhapach\SwaggerModelGenerator\Libs\Helpers\GuzzleWrapper;
 
 class BaseService
 {
@@ -37,17 +41,24 @@ class BaseService
     /** @var string - последний ответ */
     public $response;
 
-    /** @var string */
-    private $method = 'get';
-
-    /** @var \Closure - для расширения логов должна возвращать строку */
+    /** @var \Closure - для расширения логов - должна возвращать строку */
     public $logClosure;
+    
+    /** @var Client */
+    private $httpClient;
+    /** @var string */
+    private $method = 'get';    
     /** @var string - путь до файла в папке storage/app */
     private $logFileDefault = "logs/rest.log";
     /** @var string  */
     private $logFile = "";
     /** @var bool  */
     private $logEnabled = false;
+    /** @var bool - tracing http requests */
+    private $traceEnabled = false;
+    /** @var array */
+    private $traceLog = [];
+    
 
     /** @var string */
     public $errorMessage;
@@ -71,24 +82,35 @@ class BaseService
 
         $result = null;
         try {
-            $this->response = HttpHelper::request($url, $data, $method);
-            /*            if ($this->method == 'get')
-                            $this->response = HttpHelper::request($url, ['query' => HttpHelper::stringifyRequestParams($data)], $method);
-                        else{
-                            $this->response = HttpHelper::request($url, ['query' => HttpHelper::encodeRequestParams($data)], $method);
-                        }*/
-        } catch (\Exception $e) {
+            if (!$this->httpClient)
+                $this->initGuzzleClient();
+            
+            $result = $this->httpClient->request($method, $url, $data);
+            $response = (string)$result->getBody();
+        }
+        catch (RequestException $e) {
             $this->errorMessage = urldecode($e->getMessage());
             $this->errorCode = $e->getCode();
+            if ($e->getResponse()->getStatusCode() == 400)
+                $this->errorMessage = urldecode($e->getResponse()->getBody()->getContents());
+        }
+        catch (Exception $e) {
+            $this->errorCode = $e->getCode();
+            $this->errorMessage = urldecode($e->getMessage());
         }
 
+        if (!empty($errorMessage) || !empty($errorCode)) {
+            Log::error("Error Code: $errorCode. Error message: $errorMessage");
+            throw new Exception($errorMessage, $errorCode);
+        }
+                
         if ($this->logEnabled)
             $this->log();
 
         if (!empty($this->errorMessage))
             throw new \Exception($this->errorMessage, $this->errorCode);
 
-        return $this->response;
+        return $response;
     }
 
     /**
@@ -160,5 +182,50 @@ class BaseService
     public function disableLog()
     {
         $this->logEnabled = false;
+    }    
+    public function enableTrace()
+    {
+        $this->traceEnabled = true;
+        $this->initGuzzleClient();
+    }    
+    
+    public function disableTrace()
+    {
+        $this->traceEnabled = false;
+        $this->initGuzzleClient();
     }
+
+    /**
+     * @return array : null - return last request trace
+     */
+    public function lastRequestTrace()
+    {
+        return is_array($this->traceLog) && !empty($this->traceLog) ? last($this->traceLog) : null;       
+    }
+
+    /**
+     * @return array : null - return all requests trace
+     */
+    public function allRequestTrace()
+    {
+        return is_array($this->traceLog) && !empty($this->traceLog) ? $this->traceLog : null;       
+    }
+
+
+    private function initGuzzleClient()
+    {
+        $clientParams = [
+            'verify' => false
+        ];
+
+        if ($this->traceEnabled) {
+            $history = Middleware::history($this->traceLog);
+            $stack = HandlerStack::create();
+            // Add the history middleware to the handler stack.
+            $stack->push($history);
+            $clientParams['handler'] = $stack;
+        }
+
+        $this->httpClient = new Client($clientParams);
+    }    
 }

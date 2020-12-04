@@ -14,7 +14,7 @@ use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\Root as SwaggerRoo
 use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Root as OpenApi3Root;
 use Exception;
 use Symfony\Component\Yaml\Yaml;
-use mhapach\SwaggerModelGenerator\Libs\Helpers\HttpHelper;
+use mhapach\SwaggerModelGenerator\Libs\Helpers\GuzzleWrapper;
 
 class SourceFactory
 {
@@ -67,8 +67,8 @@ class SourceFactory
     private function _requestContent()
     {
         try {
-            $this->content = HttpHelper::request($this->href);
-            //$this->content = file_get_contents($this->href);
+//            $this->content = GuzzleWrapper::request($this->href);
+            $this->content = file_get_contents($this->href);
         } catch (Exception $e) {
             throw new Exception("Cant request {$this->href}\n" . $e->getMessage());
         }
