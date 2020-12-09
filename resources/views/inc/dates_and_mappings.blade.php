@@ -6,13 +6,13 @@
  * @var \mhapach\SwaggerModelGenerator\Libs\Models\Entities\MethodParamEntity $methodParamEntity
  */
 ?>
-@if (!empty($entity->getDates()))    
-    protected $dates = ["{!!implode('", "', $entity->getDates())!!}"];    
+@if (!empty($entity->dates))    
+    protected $dates = ["{!!implode('", "', $entity->dates)!!}"];    
 @endif
-@if (!empty($entity->getClassMapping()))
+@if (!empty($entity->classMapping))
     
     protected $classMapping = [
-    @foreach($entity->getClassMapping() as $name => $mapping)
+    @foreach($entity->classMapping as $name => $mapping)
     "{{$name}}" => {{$mapping}}::class,
     @endforeach];    
 @endif

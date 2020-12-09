@@ -18,6 +18,7 @@ use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Component;
 use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Property;
 use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Root;
 use Illuminate\Support\Collection;
+use phpDocumentor\Reflection\Types\Compound;
 
 
 class EntityConverter
@@ -27,6 +28,9 @@ class EntityConverter
     private $ns = '';
     private $extends = "BaseModel";
     private $implements = "";
+
+    /** @var Collection | ClassEntity[] */
+    private $convertedEntities;
 
     /**
      * Swagger constructor.
@@ -69,7 +73,7 @@ class EntityConverter
     {
         $res = null;
         /** @var Component $definition */
-        foreach ($this->sourceRoot->components as $definition) if ($definition->type == 'object' && (!$definitionName || $definitionName == $definition->name)) {
+        foreach ($this->sourceRoot->components as $definition) if ($definition->type == 'object') {
             $entityClass = new ClassEntity([
                 'name' => $definition->name,
                 'ns' => $this->ns,
@@ -79,7 +83,31 @@ class EntityConverter
                 'properties' => $this->getConvertedProperties($definition->properties),
                 'includedClasses' => [BaseModel::class, Carbon::class]
             ]);
-            $res [] = $entityClass;
+            $res[] = $entityClass;
+        }
+        $this->convertedEntities = collect($res);
+
+        /** @var ClassEntity $entityClass */
+        foreach ($this->convertedEntities as $entityClass) if ($entityClass->extends != $this->extends) {
+            $entityClass->classMapping = $this->getParentClassMappings($entityClass);
+        }
+        return $res;
+    }
+
+    /**
+     * @param ClassEntity $class
+     * @return array
+     */
+    private function getParentClassMappings(ClassEntity $class)
+    {
+        if (!$class->extends)
+            return [];
+        
+        $res = [];
+        /** @var ClassEntity $class */
+        while ($class) {
+            $res = array_merge($res, $class->classMapping ?? []);
+            $class = $this->convertedEntities->where('name', $class->extends)->first();
         }
         return $res;
     }

@@ -33,12 +33,23 @@ class ClassEntity extends BaseEntity implements IRenderable
     public $properties;
     /** @var string[] | Collection - list of modules and classes with namespaces */
     public $includedClasses; 
+    /** @var array */
+    public $classMapping = [];
+    /** @var array */
+    public $dates = [];
+    
+    public function __construct($attributes = null)
+    {
+        parent::__construct($attributes);
+        $this->_getClassMapping();
+        $this->_getDates();
+    }
 
     /**
      * get classMapping
      * @return array
      */
-    public function getClassMapping()
+    protected function _getClassMapping()
     {
         $res = [];
 
@@ -49,19 +60,22 @@ class ClassEntity extends BaseEntity implements IRenderable
                 $refClassName = last(explode('/', $prop->ref));
                 $res[$prop->name] = $refClassName;
             }
-        return $res;
+        $this->classMapping = $res;
+        return $this->classMapping;
     }
 
     /**
      * get dates array
      * @return array
      */
-    public function getDates()
+    protected function _getDates()
     {
         $res = [];
         if ($this->properties)
             foreach ($this->properties as $propertyEntity) if ($propertyEntity->format == 'date' || $propertyEntity->format == 'date-time')
                 $res[] = $propertyEntity->name;
-        return $res;
+        
+        $this->dates = $res;
+        return $this->dates;
     }
 }
