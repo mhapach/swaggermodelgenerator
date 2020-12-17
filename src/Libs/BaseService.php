@@ -90,7 +90,7 @@ class BaseService
                 $this->initGuzzleClient();
             
             $result = $this->httpClient->request($method, $url, $data);
-            $response = (string)$result->getBody();
+            $this->response = (string)$result->getBody();
         }
         catch (RequestException $e) {
             $this->errorMessage = urldecode($e->getMessage());
@@ -114,7 +114,7 @@ class BaseService
         if (!empty($this->errorMessage))
             throw new \Exception($this->errorMessage, $this->errorCode);
 
-        return $response;
+        return $this->response;
     }
 
     /**
