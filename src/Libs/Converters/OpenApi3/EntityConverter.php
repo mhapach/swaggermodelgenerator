@@ -90,6 +90,7 @@ class EntityConverter
         /** @var ClassEntity $entityClass */
         foreach ($this->convertedEntities as $entityClass) if ($entityClass->extends != $this->extends) {
             $entityClass->classMapping = $this->getParentClassMappings($entityClass);
+            $entityClass->dates = $this->getParentClassDates($entityClass);
         }
         return $res;
     }
@@ -102,13 +103,30 @@ class EntityConverter
     {
         if (!$class->extends)
             return [];
-        
-        $res = [];
+
+        $mapping = [];
         /** @var ClassEntity $class */
         while ($class) {
-            $res = array_merge($res, $class->classMapping ?? []);
+            $mapping = array_merge($mapping, $class->classMapping ?? []);
             $class = $this->convertedEntities->where('name', $class->extends)->first();
         }
-        return $res;
+        return $mapping;
+    }
+    /**
+     * @param ClassEntity $class
+     * @return array
+     */
+    private function getParentClassDates(ClassEntity $class)
+    {
+        if (!$class->extends)
+            return [];
+
+        $dates = [];
+        /** @var ClassEntity $class */
+        while ($class) {
+            $dates = array_merge($dates, $class->dates ?? []);
+            $class = $this->convertedEntities->where('name', $class->extends)->first();
+        }
+        return $dates;
     }
 }
