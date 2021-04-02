@@ -31,10 +31,11 @@
 @endif
      * ]
 @endif
+     * @param array $addClassMapping - ['field' => YourClass::class]
      * @return {{$methodEntity->psrType}} @if(strpos($methodEntity->psrType, '[]')!== false)| Collection @endif .
      * @throws \Exception
      */
-    public function {{$methodEntity->name}}(array $data = [])
+    public function {{$methodEntity->name}}(array $data = [], array $addClassMapping = [])
     {   
         @include('mhapach::inc.method_body')
     }

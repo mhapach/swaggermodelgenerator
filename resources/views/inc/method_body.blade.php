@@ -37,12 +37,12 @@
 @if ($methodEntity->type == 'array')
         if ($response)
             foreach ($response as $item)
-                @if ($methodEntity->ref) $res[] = new {{$returnTypeOrClassName}}($item) @else $res[] = $item @endif;
+                @if ($methodEntity->ref) $res[] = new {{$returnTypeOrClassName}}($item, $addClassMapping) @else $res[] = $item @endif;
     
         if ($res)
             $res = collect($res);
 @elseif ($methodEntity->ref)
-        $res = new {{$returnTypeOrClassName}}($response);
+        $res = new {{$returnTypeOrClassName}}($response, $addClassMapping);
 @else
         $res = $response;
 @endif

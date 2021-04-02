@@ -43,14 +43,16 @@ class BaseModel
          * те бывает так что у нас весь мэппинг определен в базовом классе
          * хотя лучше так не делать
          */
-        if (!empty($classMapping) && empty($this->classMapping))
-            $this->classMapping = $classMapping;
+        if (!is_array($this->classMapping))
+            $this->classMapping = [];
+
+        if (!empty($classMapping))
+            $this->classMapping = array_merge($this->classMapping, $classMapping);
 
         if (!empty($attributes) && is_array($attributes))
             $this->autoFill($attributes);
-        else if (!empty($attributes) && $attributes instanceof \stdClass) {
+        else if (!empty($attributes) && $attributes instanceof \stdClass)
             $this->autoFill(get_object_vars($attributes));
-        }
     }
 
     /**
