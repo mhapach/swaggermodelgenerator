@@ -14,7 +14,6 @@ use mhapach\SwaggerModelGenerator\Libs\Models\Sources\Swagger\Root as SwaggerRoo
 use mhapach\SwaggerModelGenerator\Libs\Models\Sources\OpenApi3\Root as OpenApi3Root;
 use Exception;
 use Symfony\Component\Yaml\Yaml;
-use mhapach\SwaggerModelGenerator\Libs\Helpers\GuzzleWrapper;
 
 class SourceFactory
 {
@@ -49,7 +48,7 @@ class SourceFactory
             throw new Exception("Response from yaml schema is empty");
 
         $parsedYaml = Yaml::parse($this->content, Yaml::PARSE_OBJECT_FOR_MAP);
-        
+
         if (!empty($parsedYaml->swagger)) {
             return new SwaggerRoot($parsedYaml);
         } else if (!empty($parsedYaml->openapi)) {

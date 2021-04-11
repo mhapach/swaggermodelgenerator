@@ -35,22 +35,33 @@ class Root extends BaseModel
     public function initComponents()
     {
         $components = null;
-        foreach ($this->components->schemas as $name => $value) /*if ($name == 'DoublePeople')*/ {
+        foreach ($this->components->schemas as $name => $value) /*if ($name == 'IncomingFileResponse')*/ {
             $value->name = ParseHelper::getSafeClassName($name);
             $extendsClassName = null;
             if (!empty($value->allOf)) {
                 $extendsClassName = last(explode("/", $value->allOf[0]->{'$ref'}));
-                $value->properties = $value->allOf[1]->properties;
+
+                if (isset($value->allOf[1])) {
+
+                    if(!empty($value->allOf[1]->properties))
+                        $value->properties = $value->allOf[1]->properties;
+
+                    if(!empty($value->allOf[1]->type) && $value->allOf[1]->type == 'object') //если ссылка объект то меньше чем объект текущий элемент быть не может
+                        $value->type = 'object';
+                }
+
             }
 
             /** @var Component $schema */
             $schema = new Component($value);
+//            dump('in root', $value->properties);
             if (!empty($value->properties))
                 $schema->properties = $this->_properties($value->properties);
-            $schema->extends = $extendsClassName; 
+            $schema->extends = $extendsClassName;
 
             $components[] = $schema;
         }
+
         if ($components)
             $this->components = collect($components);
     }
@@ -84,16 +95,16 @@ class Root extends BaseModel
     {
         /** @var array $definition */
         $res = null;
-        
+
         /** @var array $prop */
         foreach ($this->paths as $path => $yamlMethods) /*if ($path == '/sandbox/currencies/balance')*/ {
             foreach ($yamlMethods as $method => $props) {
                 $props->method = $method;
                 $props->path = $path;
-                
+
                 $res[] = new Method($props);
             }
-        }        
+        }
 
         return $this->paths = $res ? collect($res) : null;
     }

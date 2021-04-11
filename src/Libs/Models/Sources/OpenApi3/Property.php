@@ -38,9 +38,9 @@ class Property extends BaseModel
     public function __construct($attributes)
     {
 //        if (isset($attributes->name) || $this->name) {
-            $this->_initAttrByRef($attributes);
-            parent::__construct($attributes);
-            $this->init();
+        $this->_initAttrByRef($attributes);
+        parent::__construct($attributes);
+        $this->init();
 //        }
     }
 
@@ -72,24 +72,28 @@ class Property extends BaseModel
             $refName = $attributes->{'$ref'};
         elseif (isset($attributes->type) && $attributes->type == 'array' && isset($attributes->items->{'$ref'}))
             $refName = $attributes->items->{'$ref'};
-        
-        if ($refName ) {
-            $refName = last(explode('/', $refName));            
+
+        if ($refName) {
+            $refName = last(explode('/', $refName));
             $definition = $this->_getDefinitionByRef($refName);
 
+//            dump('in property', $definition);
+
             if ($definition) {
+                if (isset($definition->allOf))
+                    $definition = $definition->allOf[1];
+
                 if ($definition->type != 'object') {
                     $definition->name = $attributes->name;
                     $attributes = $definition;
                     if (!empty($attributes->enum))
                         $attributes->description = " enum values: " . implode(" | ", $attributes->enum);
-                }
-                else
+                } else
                     $attributes->type = $attributes->type ?? 'object';
             }
         }
     }
-    
+
     /**
      * @param string $name
      * @return array | null

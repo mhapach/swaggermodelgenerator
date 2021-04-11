@@ -46,14 +46,14 @@ class OpenApi3 extends BaseConverter
                 File::makeDirectory($path,0775,true,false);
 
             /** @var ClassEntity $entity */
-            foreach ($entities as $entity) 
-                File::put( $path."/{$entity->name}.php", $this->renderModel($entity));            
+            foreach ($entities as $entity)
+                File::put($path . "/{$entity->name}.php", $this->renderModel($entity));
         }
     }
 
     /**
      * @param string $path
-     * @param string|null $className - set class name 
+     * @param string|null $className - set class name
      * @param string|null $customModelsNs
      */
     public function genService(string $path, string $className = "Service", string $customModelsNs = null) {
@@ -64,7 +64,7 @@ class OpenApi3 extends BaseConverter
         $service = $swaggerServiceConverter->get($this->debugPath);
         if ($service) {
             if (!File::exists($path))
-                File::makeDirectory($path,0775,true,false);            
+                File::makeDirectory($path,0775,true,false);
             File::put( $path."/{$service->name}.php", $this->renderService($service));
         }
     }
