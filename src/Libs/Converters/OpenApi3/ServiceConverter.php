@@ -139,6 +139,9 @@ class ServiceConverter
     private function createMethodReturn(Method $method)
     {
         $res = null;
+        if (!$method->return)
+           return null;
+
         /** @var MethodReturn $methodReturn */
         foreach ($method->return as $methodReturn) {
             $res[] = new MethodReturnEntity($methodReturn->toArray());

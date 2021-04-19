@@ -66,9 +66,11 @@ class Method extends BaseModel
             $description = $response->description ?? null;
             foreach ($content as $contentType => $value) {
                 $schema = isset($value->schema) ? $value->schema : null;
-                $schema->contentType = $contentType;
-                $schema->responseCode = $responseCode;
-                $schema->description = $description;
+                if ($schema) {
+                    $schema->contentType = $contentType;
+                    $schema->responseCode = $responseCode;
+                    $schema->description = $description;
+                }
                 $this->return[] = new MethodReturn($schema);
             }
         }
