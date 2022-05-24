@@ -106,8 +106,8 @@ class BaseModel
     public function __get($name)
     {
         // name coming us with camel style thus we make em snake
-        $snakeStyleName = Str::camel($name);
-        $methodName = "get{ucfirst($snakeStyleName)}Attribute";
+        $snakeStyleName = ucfirst(Str::camel($name));
+        $methodName = "get{$snakeStyleName}Attribute";
 
         //Для relation
         if (method_exists($this, $name)) {
