@@ -41,11 +41,11 @@ class BaseService
 
     /** @var \Closure - для расширения логов - должна возвращать строку */
     public $logClosure;
-    
+
     /** @var Client */
     private $httpClient;
     /** @var string */
-    private $method = 'get';    
+    private $method = 'get';
     /** @var string - путь до файла в папке storage/app */
     private $logFileDefault = "logs/rest.log";
     /** @var string  */
@@ -56,9 +56,9 @@ class BaseService
     private $traceEnabled = false;
     /** @var array */
     private $traceLog = [];
-    
+
     /** @var string */
-    private $lastRequestedUrl; 
+    private $lastRequestedUrl;
 
     /** @var string */
     public $errorMessage;
@@ -79,7 +79,7 @@ class BaseService
         $this->requestDate = new Carbon();
 
         $this->response = null;
-        
+
         $data['on_stats'] = function (TransferStats $stats) {
             $this->lastRequestedUrl = $stats->getEffectiveUri();
         };
@@ -88,7 +88,7 @@ class BaseService
         try {
             if (!$this->httpClient)
                 $this->initGuzzleClient();
-            
+
             $result = $this->httpClient->request($method, $url, $data);
             $this->response = (string)$result->getBody();
         }
@@ -107,7 +107,7 @@ class BaseService
             Log::error("Error Code: $errorCode. Error message: $errorMessage");
             throw new Exception($errorMessage, $errorCode);
         }
-                
+
         if ($this->logEnabled)
             $this->log();
 
@@ -130,13 +130,13 @@ class BaseService
             $dirName = dirname($fileName);
             if ($dirName && !file_exists($dirName))
                 if (!File::makeDirectory($dirName))
-                    throw new \Exception("Log file creation error. Check your access rights"); 
-        }        
- 
+                    throw new \Exception("Log file creation error. Check your access rights");
+        }
+
         $extraLog = "";
         if ($this->logClosure)
             $extraLog = call_user_func($this->logClosure);
-        
+
         $content = "";
         if (!app()->runningInConsole())
             $content = "--- BEGIN ---\n" .
@@ -146,8 +146,6 @@ class BaseService
                 "Route action: " . request()->route()->getActionName() . "\n" .
                 "Refer (REQUEST_URI): " . getenv('REQUEST_URI') . "\n" .
                 "CGI params: " . json_encode(request()->all(), JSON_UNESCAPED_UNICODE) . "\n";
-        
-        
 
         $content = $content .
             "Request address: " . $this->url . "\n" .
@@ -180,22 +178,22 @@ class BaseService
     {
         $this->logFile = $logFile;
     }
-    
+
     public function enableLog()
     {
         $this->logEnabled = true;
-    }    
-    
+    }
+
     public function disableLog()
     {
         $this->logEnabled = false;
-    }    
+    }
     public function enableTrace()
     {
         $this->traceEnabled = true;
         $this->initGuzzleClient();
-    }    
-    
+    }
+
     public function disableTrace()
     {
         $this->traceEnabled = false;
@@ -207,7 +205,7 @@ class BaseService
      */
     public function lastRequestTrace()
     {
-        return is_array($this->traceLog) && !empty($this->traceLog) ? last($this->traceLog) : null;       
+        return is_array($this->traceLog) && !empty($this->traceLog) ? last($this->traceLog) : null;
     }
 
     /**
@@ -215,7 +213,7 @@ class BaseService
      */
     public function allRequestTrace()
     {
-        return is_array($this->traceLog) && !empty($this->traceLog) ? $this->traceLog : null;       
+        return is_array($this->traceLog) && !empty($this->traceLog) ? $this->traceLog : null;
     }
 
 
@@ -234,5 +232,5 @@ class BaseService
         }
 
         $this->httpClient = new Client($clientParams);
-    }    
+    }
 }

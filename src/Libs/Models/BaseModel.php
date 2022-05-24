@@ -15,8 +15,10 @@ class BaseModel
 {
     /** @var bool - Строгое соответсвие полям модели */
     protected $strict = true;
-    /** @var array  - поля даты */
+    /** @var string[]  - поля даты */
     protected $dates = [];
+    /** @var string[] - To include the attributes you need to specify these attributes to automatically append onto the response in your model */
+    protected $appends = [];
 
     /** @var array - mapping классов вида [поле из Soap => полный путь к классу] */
     protected $classMapping = [];
@@ -89,6 +91,11 @@ class BaseModel
                 $this->$name = $value;
             }
         }
+
+        if (!empty($this->appends))
+            foreach ($this->appends as $field)
+                $this->$field = $this->$field;
+
         return;
     }
     /**
@@ -100,7 +107,7 @@ class BaseModel
     {
         // name coming us with camel style thus we make em snake
         $snakeStyleName = Str::camel($name);
-        $methodName = "get{$snakeStyleName}Attribute";
+        $methodName = "get{ucfirst($snakeStyleName)}Attribute";
 
         //Для relation
         if (method_exists($this, $name)) {
