@@ -12,6 +12,7 @@ use Carbon\Carbon;
 use Carbon\Traits\Creator;
 use Exception;
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
@@ -52,17 +53,15 @@ class BaseService
     /** @var string */
     private $method = 'get';
 
-    /** @var LoggerInterface */
-    public $logger;
+    public LoggerInterface $logger;
 
-    /** @var string - путь до файла в папке storage/app */
-    private $logFileDefault = "logs/rest.log";
-    /** @var bool */
-    private $logEnabled = false;
-    /** @var bool - tracing http requests */
-    private $traceEnabled = false;
-    /** @var array */
-    private $traceLog = [];
+    private string $logMessage = "OpenApi request";
+
+    private bool $logEnabled = false;
+
+    private bool $traceEnabled = false;
+
+    private array $traceLog = [];
 
     /** @var string */
     private $lastRequestedUrl;
@@ -86,9 +85,9 @@ class BaseService
      * @param string $method
      * @param array $data
      * @return string | null
-     * @throws \Exception
+     * @throws Exception|GuzzleException
      */
-    public function request($url, array $data = [], $method = 'get')
+    public function request($url, array $data = [], string $method = 'get'): string|null
     {
         $this->url = $url;
         $this->method = strtolower($method);
@@ -104,7 +103,6 @@ class BaseService
         try {
             if (!$this->httpClient)
                 $this->initGuzzleClient();
-
             $this->lastRequestResult = $this->httpClient->request($method, $url, $data);
             $this->response = (string)$this->lastRequestResult->getBody();
         } catch (RequestException $e) {
@@ -117,16 +115,11 @@ class BaseService
             $this->errorMessage = urldecode($e->getMessage());
         }
 
-//        if (!empty($errorMessage) || !empty($errorCode)) {
-//            Log::error("Error Code: $errorCode. Error message: $errorMessage");
-//            throw new Exception($errorMessage, $errorCode);
-//        }
-
         if ($this->logEnabled)
             $this->log();
 
         if (!empty($this->errorMessage) || !empty($errorCode))
-            throw new \Exception($this->errorMessage, $this->errorCode);
+            throw new Exception($this->errorMessage, $this->errorCode);
 
         return $this->response;
     }
@@ -138,20 +131,6 @@ class BaseService
     {
         if (!$this->logger || !$this->logEnabled)
             return;
-        /*
-                $fileName = storage_path($this->logFileDefault);
-                if ($this->logFile) {
-                    $fileName = $this->logFile;
-                    $dirName = dirname($fileName);
-                    if ($dirName && !file_exists($dirName))
-                        if (!File::makeDirectory($dirName))
-                            throw new \Exception("Log file creation error. Check your access rights");
-                }
-
-                $extraLog = "";
-                if ($this->logClosure)
-                    $extraLog = call_user_func($this->logClosure);
-        */
 
         $context = [
             "Response status" => $this->lastRequestResult->getStatusCode(),
@@ -177,33 +156,20 @@ class BaseService
             ]);
 
 //        ksort($context);
-        // Storage::disk()->append($fileName, $content); //This shit makes out of memory error
-        // file_put_contents($fileName, $context, FILE_APPEND);
         if (!$this->errorCode)
-            $this->logger->info("OpenApi OK request", $context);
+            $this->logger->info($this->logMessage, $context);
         else
-            $this->logger->error("OpenApi BAD request", $context);
-    }
-
-    /**
-     * @param \Closure $closure -  замыкание расширящее стандартный лог возвращает строку
-     */
-    public function setLogClosure(\Closure $closure)
-    {
-        $this->logClosure = $closure;
-    }
-
-    /**
-     * @param string $logFile - путь к файлу
-     */
-    public function setLogFile(string $logFile)
-    {
-        $this->logFile = $logFile;
+            $this->logger->error($this->logMessage, $context);
     }
 
     public function setLogger(LoggerInterface $logger)
     {
         $this->logger = $logger;
+    }
+
+    public function setMessage(string $message)
+    {
+        $this->logMessage = $message;
     }
 
     public function enableLog()
