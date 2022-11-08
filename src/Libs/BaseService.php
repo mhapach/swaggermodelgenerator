@@ -55,7 +55,7 @@ class BaseService
 
     public LoggerInterface $logger;
 
-    private string $logMessage = "OpenApi request";
+    private string $app = "";
 
     private bool $logEnabled = false;
 
@@ -69,8 +69,8 @@ class BaseService
     public ResponseInterface $lastRequestResult;
 
     /** @var string */
-    public $errorMessage;
-    public $errorCode;
+    public string $errorMessage = "";
+    public string $errorCode = "";
 
     public function __construct(?LoggerInterface $logger = null)
     {
@@ -133,33 +133,36 @@ class BaseService
             return;
 
         $context = [
-            "Response status" => $this->lastRequestResult->getStatusCode(),
-            "Time start" => $this->requestDate->toDateTimeString(),
-            "Time end" => (new Carbon())->toDateTimeString(),
-            "Request method" => $this->method,
+            "response status" => $this->lastRequestResult->getStatusCode(),
+            "time start" => $this->requestDate->toDateTimeString(),
+            "time end" => (new Carbon())->toDateTimeString(),
+            "request method" => $this->method,
 //            "Request address" => $this->url,
-            "Request url" => $this->lastRequestedUrl,
-            "Errors" => $this->errorMessage,
-            "Data" => $this->requestParams,
-            "Response body" => DataHelper::isJson($this->response) ?
+            "request url" => $this->lastRequestedUrl,
+            "errors" => $this->errorMessage,
+            "data" => $this->requestParams,
+            "response body" => DataHelper::isJson($this->response) ?
                 json_decode($this->response, JSON_UNESCAPED_UNICODE) : $this->response,
         ];
 
         if (!app()->runningInConsole())
             $context = array_merge($context, [
-                "Route name" => (request()->route()->getName()),
-                "Route action" => request()->route()->getActionName(),
-                "Referer (REQUEST_URI)" => getenv('REQUEST_URI'),
-                "User Agent" => getenv('HTTP_USER_AGENT'),
-                "IP address" => (request()->ip() ?? 'UNKNOWN'),
-                "Url params" => request()->all(),
+                "route name" => (request()->route()->getName()),
+                "route action" => request()->route()->getActionName(),
+                "referer (REQUEST_URI)" => getenv('REQUEST_URI'),
+                "user agent" => getenv('HTTP_USER_AGENT'),
+                "ip address" => (request()->ip() ?? 'UNKNOWN'),
+                "url params" => request()->all(),
             ]);
+
+        if ($this->app)
+            $context['app'] = $this->app;
 
 //        ksort($context);
         if (!$this->errorCode)
-            $this->logger->info($this->logMessage, $context);
+            $this->logger->info('ok', $context);
         else
-            $this->logger->error($this->logMessage, $context);
+            $this->logger->error($this->errorMessage, $context);
     }
 
     public function setLogger(LoggerInterface $logger)
@@ -167,9 +170,9 @@ class BaseService
         $this->logger = $logger;
     }
 
-    public function setMessage(string $message)
+    public function setApp(string $name)
     {
-        $this->logMessage = $message;
+        $this->app = $name;
     }
 
     public function enableLog()
