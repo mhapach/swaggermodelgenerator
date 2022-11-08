@@ -9,14 +9,19 @@
 namespace mhapach\SwaggerModelGenerator\Libs;
 
 use Carbon\Carbon;
+use Carbon\Traits\Creator;
 use Exception;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\TransferStats;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
+use mhapach\SwaggerModelGenerator\Libs\Helpers\DataHelper;
+use Psr\Http\Message\ResponseInterface;
+use Psr\Log\LoggerInterface;
 
 class BaseService
 {
@@ -46,11 +51,13 @@ class BaseService
     private $httpClient;
     /** @var string */
     private $method = 'get';
+
+    /** @var LoggerInterface */
+    public $logger;
+
     /** @var string - путь до файла в папке storage/app */
     private $logFileDefault = "logs/rest.log";
-    /** @var string  */
-    private $logFile = "";
-    /** @var bool  */
+    /** @var bool */
     private $logEnabled = false;
     /** @var bool - tracing http requests */
     private $traceEnabled = false;
@@ -60,9 +67,19 @@ class BaseService
     /** @var string */
     private $lastRequestedUrl;
 
+    public ResponseInterface $lastRequestResult;
+
     /** @var string */
     public $errorMessage;
     public $errorCode;
+
+    public function __construct(?LoggerInterface $logger = null)
+    {
+        if (!$logger)
+            $this->logger = Log::build(config('logging.channels.' . env('LOG_CHANNEL', 'stack')));
+        else
+            $this->logger = $logger;
+    }
 
     /**
      * @param $url
@@ -84,34 +101,31 @@ class BaseService
             $this->lastRequestedUrl = $stats->getEffectiveUri();
         };
 
-        $result = null;
         try {
             if (!$this->httpClient)
                 $this->initGuzzleClient();
 
-            $result = $this->httpClient->request($method, $url, $data);
-            $this->response = (string)$result->getBody();
-        }
-        catch (RequestException $e) {
+            $this->lastRequestResult = $this->httpClient->request($method, $url, $data);
+            $this->response = (string)$this->lastRequestResult->getBody();
+        } catch (RequestException $e) {
             $this->errorMessage = urldecode($e->getMessage());
             $this->errorCode = $e->getCode();
             if ($e->getResponse()->getStatusCode() == 400)
                 $this->errorMessage = urldecode($e->getResponse()->getBody()->getContents());
-        }
-        catch (Exception $e) {
+        } catch (Exception $e) {
             $this->errorCode = $e->getCode();
             $this->errorMessage = urldecode($e->getMessage());
         }
 
-        if (!empty($errorMessage) || !empty($errorCode)) {
-            Log::error("Error Code: $errorCode. Error message: $errorMessage");
-            throw new Exception($errorMessage, $errorCode);
-        }
+//        if (!empty($errorMessage) || !empty($errorCode)) {
+//            Log::error("Error Code: $errorCode. Error message: $errorMessage");
+//            throw new Exception($errorMessage, $errorCode);
+//        }
 
         if ($this->logEnabled)
             $this->log();
 
-        if (!empty($this->errorMessage))
+        if (!empty($this->errorMessage) || !empty($errorCode))
             throw new \Exception($this->errorMessage, $this->errorCode);
 
         return $this->response;
@@ -119,48 +133,56 @@ class BaseService
 
     /**
      * Логируем запросы
-     * @param string $fileName
-     * @throws \Exception
      */
-    private function log()
+    private function log(): void
     {
-        $fileName = storage_path($this->logFileDefault);
-        if ($this->logFile) {
-            $fileName = $this->logFile;
-            $dirName = dirname($fileName);
-            if ($dirName && !file_exists($dirName))
-                if (!File::makeDirectory($dirName))
-                    throw new \Exception("Log file creation error. Check your access rights");
-        }
+        if (!$this->logger || !$this->logEnabled)
+            return;
+        /*
+                $fileName = storage_path($this->logFileDefault);
+                if ($this->logFile) {
+                    $fileName = $this->logFile;
+                    $dirName = dirname($fileName);
+                    if ($dirName && !file_exists($dirName))
+                        if (!File::makeDirectory($dirName))
+                            throw new \Exception("Log file creation error. Check your access rights");
+                }
 
-        $extraLog = "";
-        if ($this->logClosure)
-            $extraLog = call_user_func($this->logClosure);
+                $extraLog = "";
+                if ($this->logClosure)
+                    $extraLog = call_user_func($this->logClosure);
+        */
 
-        $content = "";
+        $context = [
+            "Response status" => $this->lastRequestResult->getStatusCode(),
+            "Time start" => $this->requestDate->toDateTimeString(),
+            "Time end" => (new Carbon())->toDateTimeString(),
+            "Request method" => $this->method,
+//            "Request address" => $this->url,
+            "Request url" => $this->lastRequestedUrl,
+            "Errors" => $this->errorMessage,
+            "Data" => $this->requestParams,
+            "Response body" => DataHelper::isJson($this->response) ?
+                json_decode($this->response, JSON_UNESCAPED_UNICODE) : $this->response,
+        ];
+
         if (!app()->runningInConsole())
-            $content = "--- BEGIN ---\n" .
-                "User Agent: " . getenv('HTTP_USER_AGENT') . "\n" .
-                "IP address: " . (request()->ip() ?? 'UNKNOWN') . "\n" .
-                "Route name: " . (request()->route()->getName()) . "\n" .
-                "Route action: " . request()->route()->getActionName() . "\n" .
-                "Refer (REQUEST_URI): " . getenv('REQUEST_URI') . "\n" .
-                "CGI params: " . json_encode(request()->all(), JSON_UNESCAPED_UNICODE) . "\n";
+            $context = array_merge($context, [
+                "Route name" => (request()->route()->getName()),
+                "Route action" => request()->route()->getActionName(),
+                "Referer (REQUEST_URI)" => getenv('REQUEST_URI'),
+                "User Agent" => getenv('HTTP_USER_AGENT'),
+                "IP address" => (request()->ip() ?? 'UNKNOWN'),
+                "Url params" => request()->all(),
+            ]);
 
-        $content = $content .
-            "Request address: " . $this->url . "\n" .
-            "Request method: " . $this->method . "\n" .
-            "Data: " . json_encode($this->requestParams) . "\n" .
-            "LastRequestedUrl: ". $this->lastRequestedUrl."\n".
-            "Response: " . $this->response . "\n" .
-            "Errors: " . $this->errorMessage . "\n" .
-            "Start time: " . $this->requestDate->toDateTimeString() . "\n" .
-            "End time: " . (new Carbon())->toDateTimeString() . "\n" .
-            $extraLog .
-            "\n--- /END ---\n";
-
-        //Storage::disk()->append($fileName, $content); //This shit makes out of memory error
-        file_put_contents($fileName, $content, FILE_APPEND);
+//        ksort($context);
+        // Storage::disk()->append($fileName, $content); //This shit makes out of memory error
+        // file_put_contents($fileName, $context, FILE_APPEND);
+        if (!$this->errorCode)
+            $this->logger->info("OpenApi OK request", $context);
+        else
+            $this->logger->error("OpenApi BAD request", $context);
     }
 
     /**
@@ -179,6 +201,11 @@ class BaseService
         $this->logFile = $logFile;
     }
 
+    public function setLogger(LoggerInterface $logger)
+    {
+        $this->logger = $logger;
+    }
+
     public function enableLog()
     {
         $this->logEnabled = true;
@@ -188,6 +215,7 @@ class BaseService
     {
         $this->logEnabled = false;
     }
+
     public function enableTrace()
     {
         $this->traceEnabled = true;

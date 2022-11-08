@@ -15,8 +15,9 @@ namespace {{$entity->ns}};
 
 @if($entity->includedClasses)
 @foreach($entity->includedClasses as $includedClass)
-use {{$includedClass}};    
-@endforeach    
+use {{$includedClass}};
+use Psr\Log\LoggerInterface;
+@endforeach
 @endif
 
 /**
@@ -32,8 +33,11 @@ class {{$entity->name}} {{$entity->extends ? 'extends '.$entity->extends : ''}} 
     /** @var array - default header lines */
     public $defaultHeaders = [];
 
-    public function __construct(string $serviceAddress, array $defaultHeaders = [])
+    public static $logger = null;
+
+    public function __construct(string $serviceAddress, array $defaultHeaders = [], ?LoggerInterface $logger = null)
     {
+        parent::__construct($logger);
         $this->serviceAddress = $serviceAddress;
         $this->defaultHeaders = $defaultHeaders;
     }
