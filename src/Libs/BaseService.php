@@ -76,7 +76,7 @@ class BaseService
     public function __construct(?LoggerInterface $logger = null)
     {
         if (!$logger)
-            $this->logger = Log::build(config('logging.channels.' . env('LOG_CHANNEL', 'stack')));
+            $this->logger = Log::build(config('logging.channels.' . config('logging.default')));
         else
             $this->logger = $logger;
     }

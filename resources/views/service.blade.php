@@ -16,9 +16,9 @@ namespace {{$entity->ns}};
 @if($entity->includedClasses)
 @foreach($entity->includedClasses as $includedClass)
 use {{$includedClass}};
-use Psr\Log\LoggerInterface;
 @endforeach
 @endif
+use Psr\Log\LoggerInterface;
 
 /**
 @if($entity->hint->title) * {{$entity->hint->title}} @endif.
