@@ -66,7 +66,8 @@ class BaseService
     /** @var string */
     private $lastRequestedUrl;
 
-    public ResponseInterface $lastRequestResult;
+    /** @var ResponseInterface */
+    public $lastRequestResult;
 
     /** @var string */
     public string $errorMessage = "";
@@ -133,7 +134,7 @@ class BaseService
             return;
 
         $context = [
-            "response status" => $this->lastRequestResult->getStatusCode(),
+            "response status" => $this->lastRequestResult?->getStatusCode() ?: $this->errorCode,
             "time start" => $this->requestDate->toDateTimeString(),
             "time end" => (new Carbon())->toDateTimeString(),
             "request method" => $this->method,

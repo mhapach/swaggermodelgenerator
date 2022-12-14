@@ -61,7 +61,7 @@ Step 2. Register SwaggerModelGeneratorServiceProvider in config/app.php
        
 ### Debug log enabling. Example 3
     $serviceAddress = "http://your-service.com/some-name";
-    $logger = config('logging.channels.'.config('logging.default'));
+    $config = config('logging.channels.'.config('logging.default'));
     $config['path'] = storage_path("logs/rest.log"); // optional
     $logger = \Log::build($config);
     $service = new Service($serviceAddress, ['Content-Type' => 'application/json'], $logger);
