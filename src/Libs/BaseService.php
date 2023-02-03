@@ -109,7 +109,7 @@ class BaseService
         } catch (RequestException $e) {
             $this->errorMessage = urldecode($e->getMessage());
             $this->errorCode = $e->getCode();
-            if ($e->getResponse()->getStatusCode() == 400)
+            if ($e->hasResponse() && $e->getResponse()?->getStatusCode() == 400)
                 $this->errorMessage = urldecode($e->getResponse()->getBody()->getContents());
         } catch (Exception $e) {
             $this->errorCode = $e->getCode();
