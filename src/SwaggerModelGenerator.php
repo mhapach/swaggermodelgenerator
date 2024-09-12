@@ -47,13 +47,13 @@ class SwaggerModelGenerator
             $this->sourceRoot = Cache::get($this->schemeUrl);
 
         if (!$this->sourceRoot) {
-            try {
+//            try {
                 $this->sourceRoot = $sourceFactory->instance();
                 Cache::put($this->schemeUrl, $this->sourceRoot);
-            } catch (\Exception $e) {
-                dd("------- Exception ------", "FILE: ".__FILE__, "LINE: ".__LINE__, "MESSAGE: ".$e->getMessage());
-                die($e->getMessage());
-            }
+//            } catch (\Exception $e) {
+//                dd("------- Exception ------", "FILE: ".__FILE__, "LINE: ".__LINE__, "MESSAGE: ".$e->getMessage());
+//                die($e->getMessage());
+//            }
         }
     }
 
@@ -77,5 +77,3 @@ class SwaggerModelGenerator
             return null;
     }
 }
-
-

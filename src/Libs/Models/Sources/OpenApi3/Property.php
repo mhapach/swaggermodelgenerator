@@ -84,7 +84,7 @@ class Property extends BaseModel
                     $definition = $definition->allOf[1];
 
                 if ($definition->type != 'object') {
-                    $definition->name = $attributes->name;
+                    $definition->name = $attributes->name ?? null;
                     $attributes = $definition;
                     if (!empty($attributes->enum))
                         $attributes->description = " enum values: " . implode(" | ", $attributes->enum);

@@ -35,7 +35,7 @@ class Root extends BaseModel
     public function initComponents()
     {
         $components = null;
-        foreach ($this->components->schemas as $name => $value) /*if ($name == 'IncomingFileResponse')*/ {
+        foreach ($this->components->schemas as $name => $value)/* if ($name == 'PackageRequest') */{
             $value->name = ParseHelper::getSafeClassName($name);
             $extendsClassName = null;
             if (!empty($value->allOf)) {
