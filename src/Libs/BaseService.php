@@ -140,13 +140,12 @@ class BaseService
             "time start" => $this->requestDate->toDateTimeString(),
             "time end" => (new Carbon())->toDateTimeString(),
             "request method" => $this->method,
-//            "Request address" => $this->url,
             "request url" => $this->lastRequestedUrl,
-            "curl" => HttpHelper::toCurl(
-                $this->method,
-                (string)($this->lastRequestedUrl ?: $this->url),
-                $this->requestParams ?? []
-            ),
+//            "curl" => HttpHelper::toCurl(
+//                $this->method,
+//                (string)($this->lastRequestedUrl ?: $this->url),
+//                $this->requestParams ?? []
+//            ),
             "errors" => $this->errorMessage,
             "data" => $this->requestParams,
             "response body" => DataHelper::isJson($this->response) ?
@@ -166,7 +165,6 @@ class BaseService
         if ($this->app)
             $context['app'] = $this->app;
 
-//        ksort($context);
         if (!$this->errorCode)
             $this->logger->info('ok', $context);
         else
