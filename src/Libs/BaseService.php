@@ -103,26 +103,41 @@ class BaseService
             $this->lastRequestedUrl = $stats->getEffectiveUri();
         };
 
+        $httpError = false;
+
         try {
-            if (!$this->httpClient)
+            if (!$this->httpClient) {
                 $this->initGuzzleClient();
+            }
             $this->lastRequestResult = $this->httpClient->request($method, $url, $data);
-            $this->response = (string)$this->lastRequestResult->getBody();
+            $this->response = (string) $this->lastRequestResult->getBody();
         } catch (RequestException $e) {
-            $this->errorMessage = urldecode($e->getMessage());
-            $this->errorCode = $e->getCode();
-            if ($e->hasResponse() && $e->getResponse()?->getStatusCode() == 400)
-                $this->errorMessage = urldecode($e->getResponse()->getBody()->getContents());
+            $httpError = $e->hasResponse();
+            if ($httpError) {
+                $response = $e->getResponse();
+                $this->errorCode = $response->getStatusCode();
+                $body = $response->getBody()->getContents();
+                $this->errorMessage = urldecode($body !== '' ? $body : $e->getMessage());
+            } else {
+                $this->errorCode = $e->getCode();
+                $this->errorMessage = urldecode($e->getMessage());
+            }
         } catch (Exception $e) {
             $this->errorCode = $e->getCode();
             $this->errorMessage = urldecode($e->getMessage());
         }
 
-        if ($this->logEnabled)
+        if ($this->logEnabled) {
             $this->log();
+        }
 
-        if (!empty($this->errorMessage) || !empty($errorCode))
-            throw new Exception($this->errorMessage, $this->errorCode);
+        if ($this->errorMessage !== '' || $this->errorCode !== '') {
+            $status = (int) $this->errorCode;
+
+            throw $httpError
+                ? new RestValidationException($this->errorMessage, $status)
+                : new Exception($this->errorMessage, $status);
+        }
 
         return $this->response;
     }
@@ -141,11 +156,11 @@ class BaseService
             "time end" => (new Carbon())->toDateTimeString(),
             "request method" => $this->method,
             "request url" => $this->lastRequestedUrl,
-//            "curl" => HttpHelper::toCurl(
-//                $this->method,
-//                (string)($this->lastRequestedUrl ?: $this->url),
-//                $this->requestParams ?? []
-//            ),
+            "curl" => HttpHelper::toCurl(
+                $this->method,
+                (string)($this->lastRequestedUrl ?: $this->url),
+                $this->requestParams ?? []
+            ),
             "errors" => $this->errorMessage,
             "data" => $this->requestParams,
             "response body" => DataHelper::isJson($this->response) ?
