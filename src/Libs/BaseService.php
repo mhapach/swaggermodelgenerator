@@ -11,6 +11,7 @@ namespace mhapach\SwaggerModelGenerator\Libs;
 use Carbon\Carbon;
 use Carbon\Traits\Creator;
 use Exception;
+use GuzzleHttp\BodySummarizer;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\GuzzleException;
 use GuzzleHttp\Exception\RequestException;
@@ -21,6 +22,7 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use mhapach\SwaggerModelGenerator\Libs\Helpers\DataHelper;
+use mhapach\SwaggerModelGenerator\Libs\Helpers\HttpHelper;
 use Psr\Http\Message\ResponseInterface;
 use Psr\Log\LoggerInterface;
 
@@ -140,6 +142,11 @@ class BaseService
             "request method" => $this->method,
 //            "Request address" => $this->url,
             "request url" => $this->lastRequestedUrl,
+            "curl" => HttpHelper::toCurl(
+                $this->method,
+                (string)($this->lastRequestedUrl ?: $this->url),
+                $this->requestParams ?? []
+            ),
             "errors" => $this->errorMessage,
             "data" => $this->requestParams,
             "response body" => DataHelper::isJson($this->response) ?
@@ -217,18 +224,18 @@ class BaseService
 
     private function initGuzzleClient()
     {
-        $clientParams = [
-            'verify' => false
-        ];
+        $stack = HandlerStack::create();
+        // Guzzle по умолчанию обрезает body в exception message (~120 символов)
+        $stack->remove('http_errors');
+        $stack->push(Middleware::httpErrors(new BodySummarizer(4096)), 'http_errors');
 
         if ($this->traceEnabled) {
-            $history = Middleware::history($this->traceLog);
-            $stack = HandlerStack::create();
-            // Add the history middleware to the handler stack.
-            $stack->push($history);
-            $clientParams['handler'] = $stack;
+            $stack->push(Middleware::history($this->traceLog));
         }
 
-        $this->httpClient = new Client($clientParams);
+        $this->httpClient = new Client([
+            'verify' => false,
+            'handler' => $stack,
+        ]);
     }
 }

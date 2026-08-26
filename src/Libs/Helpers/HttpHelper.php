@@ -59,6 +59,76 @@ class HttpHelper
     }
 
     /**
+     * Собирает воспроизводимую curl-команду из Guzzle-параметров запроса.
+     *
+     * @param string $method
+     * @param string $url
+     * @param array $options Guzzle request options (headers, query, json, form_params, body, multipart, auth)
+     * @param bool $insecure добавить -k (как Client verify => false)
+     */
+    public static function toCurl(string $method, string $url, array $options = [], bool $insecure = true): string
+    {
+        $parts = ['curl'];
+
+        if ($insecure) {
+            $parts[] = '-k';
+        }
+
+        $method = strtoupper($method);
+        if ($method !== 'GET') {
+            $parts[] = '-X ' . escapeshellarg($method);
+        }
+
+        if (!empty($options['query']) && is_array($options['query']) && strpos($url, '?') === false) {
+            $url .= '?' . http_build_query($options['query']);
+        }
+
+        $parts[] = escapeshellarg($url);
+
+        if (!empty($options['headers']) && is_array($options['headers'])) {
+            foreach ($options['headers'] as $name => $value) {
+                foreach ((array)$value as $headerValue) {
+                    $parts[] = '-H ' . escapeshellarg("$name: $headerValue");
+                }
+            }
+        }
+
+        if (!empty($options['auth']) && is_array($options['auth'])) {
+            $user = (string)($options['auth'][0] ?? '');
+            $pass = (string)($options['auth'][1] ?? '');
+            $parts[] = '-u ' . escapeshellarg("$user:$pass");
+        }
+
+        if (array_key_exists('json', $options)) {
+            $json = is_string($options['json'])
+                ? $options['json']
+                : json_encode($options['json'], JSON_UNESCAPED_UNICODE | JSON_UNESCAPED_SLASHES);
+            if (empty($options['headers']['Content-Type']) && empty($options['headers']['content-type'])) {
+                $parts[] = '-H ' . escapeshellarg('Content-Type: application/json');
+            }
+            $parts[] = '--data ' . escapeshellarg((string)$json);
+        } elseif (!empty($options['form_params']) && is_array($options['form_params'])) {
+            $parts[] = '--data ' . escapeshellarg(http_build_query($options['form_params']));
+        } elseif (array_key_exists('body', $options) && $options['body'] !== null) {
+            $parts[] = '--data ' . escapeshellarg((string)$options['body']);
+        } elseif (!empty($options['multipart']) && is_array($options['multipart'])) {
+            foreach ($options['multipart'] as $field) {
+                $name = $field['name'] ?? '';
+                if ($name === '') {
+                    continue;
+                }
+                if (isset($field['filename'])) {
+                    $parts[] = '-F ' . escapeshellarg($name . '=@' . $field['filename']);
+                } elseif (isset($field['contents']) && (is_scalar($field['contents']) || $field['contents'] === null)) {
+                    $parts[] = '-F ' . escapeshellarg($name . '=' . (string)$field['contents']);
+                }
+            }
+        }
+
+        return implode(' ', $parts);
+    }
+
+    /**
      * @param array|null $requestParams
      * @return array
      */
