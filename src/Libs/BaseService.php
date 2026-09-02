@@ -84,13 +84,13 @@ class BaseService
     }
 
     /**
-     * @param $url
+     * @param string $url
      * @param string $method
      * @param array $data
      * @return string | null
      * @throws Exception|GuzzleException
      */
-    public function request($url, array $data = [], string $method = 'get'): string|null
+    public function request(string $url, array $data = [], string $method = 'get'): ?string
     {
         $this->url = $url;
         $this->method = strtolower($method);
@@ -98,6 +98,8 @@ class BaseService
         $this->requestDate = new Carbon();
 
         $this->response = null;
+        $this->errorCode = '';
+        $this->errorMessage = '';
 
         $data['on_stats'] = function (TransferStats $stats) {
             $this->lastRequestedUrl = $stats->getEffectiveUri();
@@ -112,18 +114,21 @@ class BaseService
             $this->lastRequestResult = $this->httpClient->request($method, $url, $data);
             $this->response = (string) $this->lastRequestResult->getBody();
         } catch (RequestException $e) {
-            $httpError = $e->hasResponse();
-            if ($httpError) {
-                $response = $e->getResponse();
-                $this->errorCode = $response->getStatusCode();
-                $body = $response->getBody()->getContents();
+            // Guzzle 7: hasResponse()/getResponse() на RequestException.
+            // Guzzle 8: ответа приходит не на RequestException, а на  ResponseException (который является наследником RequestException).
+            $response = method_exists($e, 'getResponse') ? $e->getResponse() : null;
+            $httpError = method_exists($e, 'hasResponse') ? $e->hasResponse() : $response !== null;
+        
+            if ($httpError && $response) {
+                $this->errorCode = (string) $response->getStatusCode();
+                $body = (string) $response->getBody();
                 $this->errorMessage = urldecode($body !== '' ? $body : $e->getMessage());
             } else {
-                $this->errorCode = $e->getCode();
+                $this->errorCode = (string) $e->getCode();
                 $this->errorMessage = urldecode($e->getMessage());
             }
         } catch (Exception $e) {
-            $this->errorCode = $e->getCode();
+            $this->errorCode = (string) $e->getCode();
             $this->errorMessage = urldecode($e->getMessage());
         }
 

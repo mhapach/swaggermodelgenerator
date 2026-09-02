@@ -25,24 +25,25 @@
 
         /** @var array */
         $response = $this->request($requestUrl, $data, "{{$methodEntity->method ?: 'get'}}");
-        @php $returnTypeOrClassName = $methodEntity->refType @endphp
 
-        $res = null;        
+        @if($methodEntity->ref) $returnTypeOrClassName = $castToClass ?? {{$methodEntity->refType}}::class; @endif
+
+        $res = null;
 @if (!$methodEntity->return)
         $res = $response;
-@else    
+@else
 @if ($methodEntity->serviceResponseType == 'json' && ($methodEntity->type == 'array' || $methodEntity->ref))
         $response = json_decode($response);
 @endif
 @if ($methodEntity->type == 'array')
         if ($response)
             foreach ($response as $item)
-                @if ($methodEntity->ref) $res[] = new {{$returnTypeOrClassName}}($item, $addClassMapping) @else $res[] = $item @endif;
+                @if ($methodEntity->ref) $res[] = new $returnTypeOrClassName($item, $addClassMapping) @else $res[] = $item @endif;
     
         if ($res)
             $res = collect($res);
 @elseif ($methodEntity->ref)
-        $res = new {{$returnTypeOrClassName}}($response, $addClassMapping);
+        $res = new $returnTypeOrClassName($response, $addClassMapping);
 @else
         $res = $response;
 @endif

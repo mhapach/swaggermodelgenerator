@@ -32,13 +32,13 @@
      * ]
 @endif
      * @param array $addClassMapping - ['field' => YourClass::class]
+     * @param string|null $castToClass - кастуем явно к какому то классу(желательно наследнику базового)
      * @return {{$methodEntity->psrType}} @if(strpos($methodEntity->psrType, '[]')!== false)| Collection @endif .
      * @throws \Exception
      */
-    public function {{$methodEntity->name}}(array $data = [], array $addClassMapping = [])
+    public function {{$methodEntity->name}}(array $data = [], array $addClassMapping = [], ?string $castToClass = null)
     {   
         @include('mhapach::inc.method_body')
     }
- 
 @endforeach
 @endif
