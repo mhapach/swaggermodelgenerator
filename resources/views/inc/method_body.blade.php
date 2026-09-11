@@ -26,7 +26,7 @@
         /** @var array */
         $response = $this->request($requestUrl, $data, "{{$methodEntity->method ?: 'get'}}");
 
-        @if($methodEntity->ref) $returnTypeOrClassName = $castToClass ?? {{$methodEntity->refType}}::class; @endif
+        $returnTypeOrClassName = $castToClass ??@if($methodEntity->ref) {{$methodEntity->refType}}::class @else '' @endif;
 
         $res = null;
 @if (!$methodEntity->return)
@@ -45,7 +45,10 @@
 @elseif ($methodEntity->ref)
         $res = new $returnTypeOrClassName($response, $addClassMapping);
 @else
-        $res = $response;
+        if ($returnTypeOrClassName)
+            $res = new $returnTypeOrClassName($response, $addClassMapping);
+        else
+            $res = $response;
 @endif
 @endif {{-- /@if ($methodEntity->return) --}}
         return $res;
